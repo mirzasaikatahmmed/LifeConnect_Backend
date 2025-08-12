@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
 import { Admin } from './entities/admin.entity';
-import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, CreateAdminDto, LoginDto } from './admin.dto';
+import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, CreateAdminDto, LoginDto, CreateRoleDto } from './admin.dto';
 import { MailerService } from './mailer.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -101,6 +101,15 @@ export class AdminService {
       where: { isActive: true },
       order: { name: 'ASC' }
     });
+  }
+
+  // Create a new role
+  async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
+    const role = this.roleRepository.create({
+      ...createRoleDto,
+      isActive: true
+    });
+    return await this.roleRepository.save(role);
   }
 
   // Update user's role

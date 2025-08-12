@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto } from './admin.dto';
+import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
 
 @Controller('api')
@@ -114,6 +114,17 @@ export class AdminController {
       return await this.adminService.getAllRoles();
     } catch (error) {
       throw new HttpException('Failed to retrieve roles', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/roles - Creates a new role
+  @UseGuards(AdminGuard)
+  @Post('roles')
+  async createRole(@Body() createRoleDto: CreateRoleDto) {
+    try {
+      return await this.adminService.createRole(createRoleDto);
+    } catch (error) {
+      throw new HttpException('Failed to create role', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

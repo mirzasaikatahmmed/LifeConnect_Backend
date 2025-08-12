@@ -217,6 +217,42 @@ Retrieves a list of all available roles.
 }
 ```
 
+### Create Role
+**POST** `/api/roles`
+🔒 *Requires Admin Authentication*
+
+Creates a new role in the system.
+
+#### Request Body
+```json
+{
+  "name": "Donar",
+  "description": "Blood Donor Role",
+  "permissions": ["donate_blood", "view_profile"]
+}
+```
+
+#### Field Descriptions
+- `name` (string, required): The name of the role
+- `description` (string, optional): Description of the role and its purpose
+- `permissions` (array, optional): Array of permission strings for the role (defaults to empty array)
+
+#### Response
+```json
+{
+  "success": true,
+  "message": "Role created successfully",
+  "data": {
+    "id": 1,
+    "name": "Donar",
+    "description": "Blood Donor Role",
+    "permissions": ["donate_blood", "view_profile"],
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
 ### Update User Role
 **PATCH** `/api/users/:id/role`
 🔒 *Requires Admin Authentication*
@@ -561,6 +597,8 @@ All endpoints may return the following error response format:
 - "Failed to create user" (500)
 - "Failed to delete user" (500)
 - "Failed to update user role" (500)
+- "Failed to retrieve roles" (500)
+- "Failed to create role" (500)
 
 ---
 
