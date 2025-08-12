@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Param,
+  ParseIntPipe,
+  Patch,
   Post,
   UsePipes,
   ValidationPipe,
@@ -19,4 +21,20 @@ export class ManagerController {
   createaccount(@Body() data: CreateManagerDto): Promise<ManagerEntity> {
     return this.managerService.createaccount(data);
   }
+  @Get('allmanagers')
+  getAllManagers() {
+  return this.managerService.getAllManagers();
+  }
+  @Get(':id')
+  getManagerById(@Param('id', ParseIntPipe) id: number): Promise<ManagerEntity> {
+    return this.managerService.getManagerById(id);
+  }
+  @Patch(':id')
+  updateManager(
+    @Param('id',ParseIntPipe) id: number,
+    @Body() updateData: Partial<ManagerEntity>
+  ): Promise<ManagerEntity> {
+    return this.managerService.updateManager(id, updateData);
+  }
+
 }
