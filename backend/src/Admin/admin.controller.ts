@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto } from './admin.dto';
+import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
 
 @Controller('api')
@@ -15,6 +15,42 @@ export class AdminController {
       return await this.adminService.getAllUsers();
     } catch (error) {
       throw new HttpException('Failed to retrieve users', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/users - Creates a new user account
+  @Post('users')
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    try {
+      // Check if user with this email already exists
+      const existingUser = await this.adminService.findUserByEmail(createUserDto.email);
+      if (existingUser) {
+        throw new HttpException('User with this email already exists', HttpStatus.CONFLICT);
+      }
+      return await this.adminService.createUser(createUserDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to create user', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/admins - Creates a new admin account
+  @Post('admins')
+  async createAdmin(@Body() createAdminDto: CreateAdminDto) {
+    try {
+      // Check if admin with this email already exists
+      const existingAdmin = await this.adminService.findAdminByEmail(createAdminDto.email);
+      if (existingAdmin) {
+        throw new HttpException('Admin with this email already exists', HttpStatus.CONFLICT);
+      }
+      return await this.adminService.createAdmin(createAdminDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to create admin', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

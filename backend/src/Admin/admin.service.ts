@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
 import { Admin } from './entities/admin.entity';
-import { CreateAlertDto, SendAlertEmailDto } from './admin.dto';
+import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, CreateAdminDto } from './admin.dto';
 import { MailerService } from './mailer.service';
 
 @Injectable()
@@ -36,6 +36,55 @@ export class AdminService {
       where: { id },
       relations: ['role']
     });
+  }
+
+  // Find user by email
+  async findUserByEmail(email: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { email },
+      relations: ['role']
+    });
+  }
+
+  // Create a new user
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const bcrypt = require('bcrypt');
+    
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
+    
+    // Create user with hashed password
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword
+    });
+    
+    return await this.userRepository.save(user);
+  }
+
+  // Find admin by email
+  async findAdminByEmail(email: string): Promise<Admin | null> {
+    return await this.adminRepository.findOne({
+      where: { email }
+    });
+  }
+
+  // Create a new admin
+  async createAdmin(createAdminDto: CreateAdminDto): Promise<Admin> {
+    const bcrypt = require('bcrypt');
+    
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(createAdminDto.password, saltRounds);
+    
+    // Create admin with hashed password
+    const admin = this.adminRepository.create({
+      ...createAdminDto,
+      password: hashedPassword
+    });
+    
+    return await this.adminRepository.save(admin);
   }
 
   // Delete a user account
