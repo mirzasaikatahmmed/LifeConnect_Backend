@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { MailerService } from './mailer.service';
 import { Admin } from './entities/admin.entity';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
@@ -19,7 +20,7 @@ import { JwtGuard } from './guards/jwt.guard';
     }),
   ],
   controllers: [AdminController],
-  providers: [AdminService, AdminGuard, JwtGuard],
-  exports: [AdminService, TypeOrmModule],
+  providers: [AdminService, MailerService, AdminGuard, JwtGuard],
+  exports: [AdminService, MailerService, TypeOrmModule],
 })
 export class AdminModule {}

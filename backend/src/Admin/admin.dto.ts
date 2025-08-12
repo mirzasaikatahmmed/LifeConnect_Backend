@@ -116,3 +116,34 @@ export class CreateRoleDto {
   @IsOptional()
   permissions?: string[] = [];
 }
+
+export class SendAlertEmailDto {
+  @IsNotEmpty()
+  @IsString()
+  title: string;
+
+  @IsNotEmpty()
+  @IsString()
+  message: string;
+
+  @IsOptional()
+  @IsIn(['info', 'warning', 'error', 'success'])
+  type?: string = 'info';
+
+  @IsOptional()
+  @IsIn(['all', 'donors', 'managers', 'admins'])
+  targetAudience?: string = 'all';
+
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @IsIn([0, 1, 2, 3])
+  priority?: number = 0;
+
+  @IsOptional()
+  @IsBoolean()
+  sendEmail?: boolean = true;
+}

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto } from './admin.dto';
+import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
 
 @Controller('api')
@@ -106,6 +106,94 @@ export class AdminController {
         throw error;
       }
       throw new HttpException('Failed to delete alert', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/alerts/active - Get all active alerts
+  @Get('alerts/active')
+  async getActiveAlerts() {
+    try {
+      return await this.adminService.getActiveAlerts();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve active alerts', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/alerts/send-email - Creates alert and sends email to all users
+  @Post('alerts/send-email')
+  async createAlertAndSendEmail(@Body() sendAlertEmailDto: SendAlertEmailDto) {
+    try {
+      const result = await this.adminService.createAlertAndSendEmail(sendAlertEmailDto);
+      return {
+        success: true,
+        message: 'Alert created and email process initiated',
+        data: {
+          alert: result.alert,
+          emailResult: result.emailResult
+        }
+      };
+    } catch (error) {
+      throw new HttpException('Failed to create alert or send email', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/alerts/:id/send-email - Sends existing alert via email to all users
+  @Post('alerts/:id/send-email')
+  async sendExistingAlert(@Param('id') id: number) {
+    try {
+      const result = await this.adminService.sendExistingAlert(id);
+      return {
+        success: result.success,
+        message: result.message,
+        data: {
+          sentCount: result.sentCount,
+          failedCount: result.failedCount
+        }
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to send alert email', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/mailer/test-connection - Test SMTP connection
+  @Get('mailer/test-connection')
+  async testEmailConnection() {
+    try {
+      const result = await this.adminService.testEmailConnection();
+      return {
+        success: result.success,
+        message: result.message,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      throw new HttpException('Failed to test email connection', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/mailer/test-send - Create test user and send test email
+  @Post('mailer/test-send')
+  async createTestUserAndSendEmail(@Body() body: { email: string }) {
+    try {
+      const result = await this.adminService.createTestUserAndSendEmail(body.email);
+      return {
+        success: result.emailResult.success,
+        message: 'Test user created and email sent',
+        data: {
+          user: {
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
+            userType: result.user.userType
+          },
+          emailResult: result.emailResult
+        },
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      throw new HttpException('Failed to create test user or send email', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

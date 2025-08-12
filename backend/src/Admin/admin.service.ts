@@ -5,7 +5,8 @@ import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
 import { Admin } from './entities/admin.entity';
-import { CreateAlertDto } from './admin.dto';
+import { CreateAlertDto, SendAlertEmailDto } from './admin.dto';
+import { MailerService } from './mailer.service';
 
 @Injectable()
 export class AdminService {
@@ -18,6 +19,7 @@ export class AdminService {
     private alertRepository: Repository<Alert>,
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
+    private mailerService: MailerService,
   ) {}
 
   // Get all users (Donors and Managers)
@@ -115,5 +117,87 @@ export class AdminService {
       where: { status: 'active' },
       order: { priority: 'DESC', createdAt: 'DESC' }
     });
+  }
+
+  // Create alert and send email to all users
+  async createAlertAndSendEmail(sendAlertEmailDto: SendAlertEmailDto): Promise<{
+    alert: Alert;
+    emailResult: { success: boolean; message: string; sentCount?: number; failedCount?: number };
+  }> {
+    // Create the alert in database
+    const createAlertDto: CreateAlertDto = {
+      title: sendAlertEmailDto.title,
+      message: sendAlertEmailDto.message,
+      type: sendAlertEmailDto.type,
+      targetAudience: sendAlertEmailDto.targetAudience,
+      expiresAt: sendAlertEmailDto.expiresAt,
+      priority: sendAlertEmailDto.priority,
+      isSystemWide: true,
+    };
+
+    const alert = await this.createAlert(createAlertDto);
+
+    // Send email if requested
+    let emailResult = { success: false, message: 'Email not sent' };
+    if (sendAlertEmailDto.sendEmail !== false) {
+      emailResult = await this.mailerService.sendAlertToAllUsers(alert);
+    }
+
+    return {
+      alert,
+      emailResult
+    };
+  }
+
+  // Send existing alert via email
+  async sendExistingAlert(alertId: number): Promise<{
+    success: boolean;
+    message: string;
+    sentCount?: number;
+    failedCount?: number;
+  }> {
+    const alert = await this.findAlertById(alertId);
+    
+    if (!alert) {
+      return {
+        success: false,
+        message: 'Alert not found'
+      };
+    }
+
+    if (alert.status !== 'active') {
+      return {
+        success: false,
+        message: 'Only active alerts can be sent via email'
+      };
+    }
+
+    return await this.mailerService.sendAlertToAllUsers(alert);
+  }
+
+  // Test SMTP connection
+  async testEmailConnection(): Promise<{ success: boolean; message: string }> {
+    const isConnected = await this.mailerService.testConnection();
+    return {
+      success: isConnected,
+      message: isConnected ? 'SMTP connection successful' : 'SMTP connection failed'
+    };
+  }
+
+  // Create test user and send test email
+  async createTestUserAndSendEmail(email: string): Promise<{
+    user: User;
+    emailResult: { success: boolean; message: string };
+  }> {
+    // Create or get existing test user
+    const testUser = await this.mailerService.createTestUser(email);
+    
+    // Send test email
+    const emailResult = await this.mailerService.sendTestEmail(email, testUser.name);
+    
+    return {
+      user: testUser,
+      emailResult
+    };
   }
 }
