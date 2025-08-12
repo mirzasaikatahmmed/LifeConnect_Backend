@@ -11,6 +11,19 @@ export class CreateAdminDto {
   @IsNotEmpty()
   @IsString()
   password: string;
+
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+}
+
+export class LoginDto {
+  @IsEmail()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 }
 
 export class UpdateUserRoleDto {

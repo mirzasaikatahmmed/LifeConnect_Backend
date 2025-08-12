@@ -1,14 +1,27 @@
 import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto } from './admin.dto';
+import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
 
 @Controller('api')
-@UseGuards(AdminGuard)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  // POST /api/login - Admin login endpoint
+  @Post('login')
+  async login(@Body() loginDto: LoginDto) {
+    try {
+      return await this.adminService.loginAdmin(loginDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Login failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // GET /api/users - Retrieves a list of all users (Donors and Managers)
+  @UseGuards(AdminGuard)
   @Get('users')
   async getAllUsers() {
     try {
@@ -19,6 +32,7 @@ export class AdminController {
   }
 
   // POST /api/users - Creates a new user account
+  @UseGuards(AdminGuard)
   @Post('users')
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
@@ -36,7 +50,27 @@ export class AdminController {
     }
   }
 
+  // POST /api/bootstrap-admin - Creates the first admin account (no auth required)
+  @Post('bootstrap-admin')
+  async bootstrapAdmin(@Body() createAdminDto: CreateAdminDto) {
+    try {
+      // Check if any admin already exists
+      const existingAdmins = await this.adminService.findAdminByEmail(createAdminDto.email);
+      if (existingAdmins) {
+        throw new HttpException('Admin with this email already exists', HttpStatus.CONFLICT);
+      }
+      
+      return await this.adminService.createAdmin(createAdminDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to create bootstrap admin', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // POST /api/admins - Creates a new admin account
+  @UseGuards(AdminGuard)
   @Post('admins')
   async createAdmin(@Body() createAdminDto: CreateAdminDto) {
     try {
@@ -55,6 +89,7 @@ export class AdminController {
   }
 
   // DELETE /api/users/:id - Deletes a user account
+  @UseGuards(AdminGuard)
   @Delete('users/:id')
   async deleteUser(@Param('id') id: number) {
     try {
@@ -72,6 +107,7 @@ export class AdminController {
   }
 
   // GET /api/roles - Retrieves a list of all available roles
+  @UseGuards(AdminGuard)
   @Get('roles')
   async getAllRoles() {
     try {
@@ -82,6 +118,7 @@ export class AdminController {
   }
 
   // PATCH /api/users/:id/role - Updates a user's role
+  @UseGuards(AdminGuard)
   @Patch('users/:id/role')
   async updateUserRole(@Param('id') id: number, @Body() updateUserRoleDto: UpdateUserRoleDto) {
     try {
@@ -99,6 +136,7 @@ export class AdminController {
   }
 
   // GET /api/reports/donations - Generates a report on donation statistics
+  @UseGuards(AdminGuard)
   @Get('reports/donations')
   async getDonationReports() {
     try {
@@ -109,6 +147,7 @@ export class AdminController {
   }
 
   // GET /api/reports/requests - Generates a report on blood request statistics
+  @UseGuards(AdminGuard)
   @Get('reports/requests')
   async getRequestReports() {
     try {
@@ -119,6 +158,7 @@ export class AdminController {
   }
 
   // POST /api/alerts - Sends a new system-wide alert or notification
+  @UseGuards(AdminGuard)
   @Post('alerts')
   async createAlert(@Body() createAlertDto: CreateAlertDto) {
     try {
@@ -129,6 +169,7 @@ export class AdminController {
   }
 
   // DELETE /api/alerts/:id - Deletes a system-wide alert
+  @UseGuards(AdminGuard)
   @Delete('alerts/:id')
   async deleteAlert(@Param('id') id: number) {
     try {
@@ -146,6 +187,7 @@ export class AdminController {
   }
 
   // GET /api/alerts/active - Get all active alerts
+  @UseGuards(AdminGuard)
   @Get('alerts/active')
   async getActiveAlerts() {
     try {
@@ -156,6 +198,7 @@ export class AdminController {
   }
 
   // POST /api/alerts/send-email - Creates alert and sends email to all users
+  @UseGuards(AdminGuard)
   @Post('alerts/send-email')
   async createAlertAndSendEmail(@Body() sendAlertEmailDto: SendAlertEmailDto) {
     try {
@@ -174,6 +217,7 @@ export class AdminController {
   }
 
   // POST /api/alerts/:id/send-email - Sends existing alert via email to all users
+  @UseGuards(AdminGuard)
   @Post('alerts/:id/send-email')
   async sendExistingAlert(@Param('id') id: number) {
     try {
@@ -195,6 +239,7 @@ export class AdminController {
   }
 
   // GET /api/mailer/test-connection - Test SMTP connection
+  @UseGuards(AdminGuard)
   @Get('mailer/test-connection')
   async testEmailConnection() {
     try {
@@ -210,6 +255,7 @@ export class AdminController {
   }
 
   // POST /api/mailer/test-send - Create test user and send test email
+  @UseGuards(AdminGuard)
   @Post('mailer/test-send')
   async createTestUserAndSendEmail(@Body() body: { email: string }) {
     try {
