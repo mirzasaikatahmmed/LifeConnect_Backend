@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+#Folder
+/Source_pptx
+
 # Logs
 logs
 *.log
