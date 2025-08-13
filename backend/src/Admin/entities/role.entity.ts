@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
+import { IsIn } from 'class-validator';
 
 @Entity('roles')
 export class Role {

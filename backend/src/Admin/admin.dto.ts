@@ -107,6 +107,7 @@ export class UpdateUserDto {
 export class CreateRoleDto {
   @IsNotEmpty()
   @IsString()
+  @IsIn(['admin','manager','doner'])
   name: string;
 
   @IsOptional()
