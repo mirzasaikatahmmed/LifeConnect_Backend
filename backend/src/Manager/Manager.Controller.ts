@@ -8,15 +8,18 @@ import {
   Patch,
   Post,
   Put,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { ManagerService } from './Manager.Service';
 import { CreateManagerDto } from './dto files/manager.dto';
 import { ManagerEntity } from './Entities/Manager.entity';
-import { CreateRoleDto, CreateUserDto } from 'src/Admin/admin.dto';
+import { CreateRoleDto, CreateUserDto, LoginDto } from 'src/Admin/admin.dto';
 import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
+import { ManagerGuard } from './guards/manager.guard';
+import { JwtGuard } from 'src/Admin/guards/jwt.guard';
 
 @Controller('manager')
 export class ManagerController {
@@ -33,10 +36,12 @@ export class ManagerController {
   }
 
   @Get('allmanagers')
+ @UseGuards(ManagerGuard)
   getAllManagers() {
   return this.managerService.getAllManagers();
   }
   @Get(':id')
+  @UseGuards(ManagerGuard)
   getManagerById(@Param('id', ParseIntPipe) id: number): Promise<ManagerEntity> {
     return this.managerService.getManagerById(id);
   }
@@ -63,5 +68,11 @@ async updatefulluser(
   @Body() updateData: CreateUserDto, 
 ) {
   return this.managerService.updateUser(id, updateData);
-}
+  }
+  
+  @Post('login')
+  @UsePipes(new ValidationPipe())
+  async login(@Body() loginDto: LoginDto) {
+    return this.managerService.login(loginDto.email, loginDto.password);
+  }
 }

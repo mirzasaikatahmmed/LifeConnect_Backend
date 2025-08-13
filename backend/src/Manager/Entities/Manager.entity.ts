@@ -22,6 +22,9 @@ export class ManagerEntity {
   @Column({ unique: true })
   email: string;
 
+  @Column({ default: 'manager' }) 
+  role: string;
+
   @CreateDateColumn()
   joiningDate: Date;
 }

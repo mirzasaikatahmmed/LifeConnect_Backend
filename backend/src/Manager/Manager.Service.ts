@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ManagerEntity } from './Entities/Manager.entity';
 import { Repository } from 'typeorm';
@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateRoleDto, CreateUserDto } from 'src/Admin/admin.dto';
 import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
+import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class ManagerService {
   constructor(
@@ -16,6 +17,7 @@ export class ManagerService {
     private userRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+    private jwtService:JwtService
   ) {}
   async createaccount(data: CreateManagerDto): Promise<ManagerEntity> {
     const existingUsername = await this.managerRepository.findOne({
@@ -104,5 +106,38 @@ export class ManagerService {
   }
   Object.assign(user, updateData);
   return this.userRepository.save(user);
-}
+  }
+  
+  async login(email: string, password: string) {
+    const manager = await this.managerRepository.findOne({
+      where: { email }
+    });
+
+    if (!manager) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, manager.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = { 
+      id: manager.id, 
+      email: manager.email, 
+      username: manager.username,
+      role: manager.role, // 'manager' 
+      userType: 'manager'
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      manager: {
+        id: manager.id,
+        username: manager.username,
+        email: manager.email,
+        role: manager.role
+      }
+    };
+  }
 }
