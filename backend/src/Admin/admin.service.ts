@@ -1,12 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
 import { Admin } from './entities/admin.entity';
-import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, CreateAdminDto } from './admin.dto';
+import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, CreateAdminDto, LoginDto, CreateRoleDto } from './admin.dto';
 import { MailerService } from './mailer.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AdminService {
@@ -20,6 +21,7 @@ export class AdminService {
     @InjectRepository(Admin)
     private adminRepository: Repository<Admin>,
     private mailerService: MailerService,
+    private jwtService: JwtService,
   ) {}
 
   // Get all users (Donors and Managers)
@@ -99,6 +101,15 @@ export class AdminService {
       where: { isActive: true },
       order: { name: 'ASC' }
     });
+  }
+
+  // Create a new role
+  async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
+    const role = this.roleRepository.create({
+      ...createRoleDto,
+      isActive: true
+    });
+    return await this.roleRepository.save(role);
   }
 
   // Update user's role
@@ -247,6 +258,46 @@ export class AdminService {
     return {
       user: testUser,
       emailResult
+    };
+  }
+
+  // Admin login method
+  async loginAdmin(loginDto: LoginDto): Promise<{ access_token: string; admin: Omit<Admin, 'password'> }> {
+    const bcrypt = require('bcrypt');
+    
+    // Find admin by email
+    const admin = await this.adminRepository.findOne({
+      where: { email: loginDto.email }
+    });
+
+    if (!admin) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(loginDto.password, admin.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Create JWT payload
+    const payload = {
+      sub: admin.id,
+      email: admin.email,
+      name: admin.name,
+      userType: 'admin',
+      role: 'admin'
+    };
+
+    // Generate JWT token
+    const access_token = await this.jwtService.signAsync(payload);
+
+    // Return token and admin info (without password)
+    const { password, ...adminWithoutPassword } = admin;
+    
+    return {
+      access_token,
+      admin: adminWithoutPassword
     };
   }
 }

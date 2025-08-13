@@ -1,22 +1,36 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
+  constructor(private jwtService: JwtService) {}
 
-    if (!user) {
-      throw new UnauthorizedException('Authentication required');
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<Request>();
+    const token = this.extractTokenFromHeader(request);
+
+    if (!token) {
+      throw new UnauthorizedException('Unauthorized access. Admin privileges required.');
     }
 
-    if (user.role !== 'admin' && user.userType !== 'admin') {
-      throw new UnauthorizedException('Admin privileges required');
-    }
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+      request['user'] = payload;
 
-    return true;
+      // Check if user has admin role
+      if (payload.role !== 'admin' && payload.userType !== 'admin') {
+        throw new UnauthorizedException('Unauthorized access. Admin privileges required.');
+      }
+
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException('Unauthorized access. Admin privileges required.');
+    }
+  }
+
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 }
