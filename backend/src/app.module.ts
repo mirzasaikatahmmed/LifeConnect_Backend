@@ -24,4 +24,4 @@ import { DonorModule } from './Donor/donor.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

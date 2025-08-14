@@ -8,6 +8,7 @@ import { CreateRoleDto, CreateUserDto } from 'src/Admin/admin.dto';
 import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
 import { JwtService } from '@nestjs/jwt';
+import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class ManagerService {
   constructor(
@@ -17,8 +18,9 @@ export class ManagerService {
     private userRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
-    private jwtService:JwtService
-  ) {}
+    private jwtService: JwtService,
+    private readonly mailerService: MailerService
+  ) { }
   async createaccount(data: CreateManagerDto): Promise<ManagerEntity> {
     const existingUsername = await this.managerRepository.findOne({
       where: { username: data.username },
@@ -48,26 +50,39 @@ export class ManagerService {
     return savedManager;
   }
 
-  
-  async getAllManagers(): Promise<ManagerEntity[]>{
+
+  async getAllManagers(): Promise<ManagerEntity[]> {
     return await this.managerRepository.find()
   }
   async getManagerById(id: number): Promise<ManagerEntity> {
-  const manager = await this.managerRepository.findOneBy({  id });
-  if (!manager) {
-    throw new NotFoundException(`Manager with ID ${id} not found`);
+    const manager = await this.managerRepository.findOneBy({ id });
+    if (!manager) {
+      throw new NotFoundException(`Manager with ID ${id} not found`);
+    }
+    return manager;
   }
-  return manager;
-  }
+  // async updateManager(id: number, updateData: Partial<ManagerEntity>): Promise<ManagerEntity> {
+  //   await this.managerRepository.update(id, updateData);
+  //   const updatedManager = await this.managerRepository.findOneBy({ id });
+  //   if (!updatedManager) {
+  //     throw new NotFoundException(`Manager with ID ${id} not found`);
+  //   }
+  //   return updatedManager;
+  // }
   async updateManager(id: number, updateData: Partial<ManagerEntity>): Promise<ManagerEntity> {
-  await this.managerRepository.update(id, updateData); 
-  const updatedManager = await this.managerRepository.findOneBy({ id });
-  if (!updatedManager) {
-    throw new NotFoundException(`Manager with ID ${id} not found`);
+
+    if (updateData.password) {
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+    }
+    await this.managerRepository.update(id, updateData);
+    const updatedManager = await this.managerRepository.findOneBy({ id });
+    if (!updatedManager) {
+      throw new NotFoundException(`Manager with ID ${id} not found`);
+    }
+    return updatedManager;
   }
-  return updatedManager;
-  }
-  
+
 
   async createManagerUser(data: CreateUserDto): Promise<User> {
     const role = await this.roleRepository.findOneBy({ id: data.roleId });
@@ -83,31 +98,31 @@ export class ManagerService {
     });
     return await this.userRepository.save(user);
   }
-    async createRole(data: CreateRoleDto): Promise<Role> {
+  async createRole(data: CreateRoleDto): Promise<Role> {
     const role = this.roleRepository.create(data);
     return this.roleRepository.save(role);
   }
-   async deleteuserbyid(id: number): Promise<{ messege: string }>{
-     const findid = await this.userRepository.findOneBy({ id })
-     if (!findid) {
-       throw new NotFoundException("User not found");
-     }
-     const result = await this.userRepository.delete(id);
-     return {messege:"User deleted successfully."}
+  async deleteuserbyid(id: number): Promise<{ messege: string }> {
+    const findid = await this.userRepository.findOneBy({ id })
+    if (!findid) {
+      throw new NotFoundException("User not found");
+    }
+    const result = await this.userRepository.delete(id);
+    return { messege: "User deleted successfully." }
   }
   //PuT request function
   async updateUser(id: number, updateData: CreateUserDto): Promise<User> {
-  const user = await this.userRepository.findOneBy({ id });
-  if (!user) {
-    throw new NotFoundException(`User with ID ${id} not found`);
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+    Object.assign(user, updateData);
+    return this.userRepository.save(user);
   }
-  if (updateData.password) {
-    updateData.password = await bcrypt.hash(updateData.password, 10);
-  }
-  Object.assign(user, updateData);
-  return this.userRepository.save(user);
-  }
-  
+
   async login(email: string, password: string) {
     const manager = await this.managerRepository.findOne({
       where: { email }
@@ -122,9 +137,9 @@ export class ManagerService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { 
-      id: manager.id, 
-      email: manager.email, 
+    const payload = {
+      id: manager.id,
+      email: manager.email,
       username: manager.username,
       role: manager.role, // 'manager' 
       userType: 'manager'
@@ -139,5 +154,26 @@ export class ManagerService {
         role: manager.role
       }
     };
+  }
+
+  async sendWelcomeEmail(toEmail: string, username: string) {
+    await this.mailerService.sendMail({
+      from: process.env.SMTP_USER,
+      to: toEmail,
+      subject: 'Welcome to LifeConnect!',
+      text: `Hello ${username}, your account has been created successfully.`,
+      html: `<h3>Hello ${username}</h3><p>Your account has been created successfully.</p>`,
+    });
+    return { message: 'Email sent successfully' };
+  }
+  async sendUpdateEmail(toEmail: string, username: string) {
+    await this.mailerService.sendMail({
+      from: process.env.SMTP_USER,
+      to: toEmail,
+      subject: 'Your LifeConnect Account Has Been Updated',
+      text: `Hello ${username}, your account details have been updated successfully.`,
+      html: `<h3>Hello ${username}</h3><p>Your account details have been updated successfully.</p>`,
+    });
+    return { message: 'Update email sent successfully' };
   }
 }
