@@ -11,9 +11,9 @@ import { JwtGuard } from './guards/jwt.guard';
 import { MailerService } from './mailer.service';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Donor, Donation, Appointment, Request])],
-    controllers: [DonorController, RequestsController],
-    providers: [DonorService, JwtGuard, MailerService],
-    exports: [DonorService],
+  imports: [TypeOrmModule.forFeature([Donor, Donation, Appointment, Request])],
+  controllers: [DonorController, RequestsController],
+  providers: [DonorService, JwtGuard, MailerService],
+  exports: [DonorService],
 })
-export class DonorModule { }
+export class DonorModule {}
