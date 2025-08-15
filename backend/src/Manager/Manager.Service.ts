@@ -9,6 +9,8 @@ import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '@nestjs-modules/mailer';
+import { CreateBloodRequestDto, UpdateBloodRequestDto } from './dto files/bloodrequest.dto';
+import { BloodRequest } from './Entities/bloodrequest.entity';
 @Injectable()
 export class ManagerService {
   constructor(
@@ -18,6 +20,8 @@ export class ManagerService {
     private userRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+    @InjectRepository(BloodRequest)
+    private requestRepository: Repository<BloodRequest>,
     private jwtService: JwtService,
     private readonly mailerService: MailerService
   ) { }
@@ -175,5 +179,54 @@ export class ManagerService {
       html: `<h3>Hello ${username}</h3><p>Your account details have been updated successfully.</p>`,
     });
     return { message: 'Update email sent successfully' };
+  }
+
+  // async createbloodrequest(createdata: CreateBloodRequestDto): Promise<{ message: string, data?: BloodRequest }> {
+  //   const post = await this.requestRepository.save(createdata);
+  //   return { message: "Blood request Posted", data: post }
+  // }
+  async createbloodrequest(managerId: number, createdata: CreateBloodRequestDto): Promise<{ message: string, data?: BloodRequest }> {
+    const bloodRequestData = {
+      ...createdata,
+      managerId,
+      // neededBy: new Date(createdata.neededBy) // Convert string to Date
+    };
+
+    const post = await this.requestRepository.save(bloodRequestData);
+    return { message: "Blood request Posted", data: post };
+  }
+
+  async updateBloodRequest(requestId: number, updateData: UpdateBloodRequestDto, managerId: number): Promise<{ message: string, data?: BloodRequest | null }> {
+    const existingRequest = await this.requestRepository.findOne({
+      where: { id: requestId, managerId }
+    });
+    if (!existingRequest) {
+      throw new NotFoundException(`Blood request with ID ${requestId} not found or you don't have permission to update it`);
+    }
+    await this.requestRepository.update(requestId, updateData);
+    const updatedRequest = await this.requestRepository.findOne({
+      where: { id: requestId },
+      relations: ['postedBy']
+    });
+    return {
+      message: "Blood request updated successfully",
+      data: updatedRequest
+    };
+  }
+
+  async deleteBloodRequest(requestId: number, managerId: number): Promise<{ message: string }> {
+    const existingRequest = await this.requestRepository.findOne({
+      where: { id: requestId, managerId }
+    });
+    if (!existingRequest) {
+      throw new NotFoundException(
+        `Blood request with ID ${requestId} not found or you don't have permission to delete it`
+      );
+    }
+    await this.requestRepository.delete(requestId);
+    console.log(`Blood request ID ${requestId} deleted by manager ${managerId}`);
+    return {
+      message: "Blood request deleted successfully"
+    };
   }
 }

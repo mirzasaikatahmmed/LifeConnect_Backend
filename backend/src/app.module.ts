@@ -4,7 +4,8 @@ import { AppService } from './app.service';
 import { ManagerModule } from './Manager/Manager.Module';
 import { AdminModule } from './Admin/admin.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
+import * as dotenv from 'dotenv';
+dotenv.config()
 @Module({
   imports: [
     ManagerModule,
