@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { CreateAdminDto, UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
+import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
 
 @Controller('api')
@@ -52,15 +52,15 @@ export class AdminController {
 
   // POST /api/bootstrap-admin - Creates the first admin account (no auth required)
   @Post('bootstrap-admin')
-  async bootstrapAdmin(@Body() createAdminDto: CreateAdminDto) {
+  async bootstrapAdmin(@Body() createUserDto: CreateUserDto) {
     try {
       // Check if any admin already exists
-      const existingAdmins = await this.adminService.findAdminByEmail(createAdminDto.email);
+      const existingAdmins = await this.adminService.findAdminByEmail(createUserDto.email);
       if (existingAdmins) {
         throw new HttpException('Admin with this email already exists', HttpStatus.CONFLICT);
       }
       
-      return await this.adminService.createAdmin(createAdminDto);
+      return await this.adminService.createAdmin(createUserDto);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -72,14 +72,14 @@ export class AdminController {
   // POST /api/admins - Creates a new admin account
   @UseGuards(AdminGuard)
   @Post('admins')
-  async createAdmin(@Body() createAdminDto: CreateAdminDto) {
+  async createAdmin(@Body() createUserDto: CreateUserDto) {
     try {
       // Check if admin with this email already exists
-      const existingAdmin = await this.adminService.findAdminByEmail(createAdminDto.email);
+      const existingAdmin = await this.adminService.findAdminByEmail(createUserDto.email);
       if (existingAdmin) {
         throw new HttpException('Admin with this email already exists', HttpStatus.CONFLICT);
       }
-      return await this.adminService.createAdmin(createAdminDto);
+      return await this.adminService.createAdmin(createUserDto);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
