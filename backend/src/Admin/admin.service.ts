@@ -4,8 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
-import { Admin } from './entities/admin.entity';
-import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, CreateAdminDto, LoginDto, CreateRoleDto } from './admin.dto';
+import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
 import { MailerService } from './mailer.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -18,8 +17,6 @@ export class AdminService {
     private roleRepository: Repository<Role>,
     @InjectRepository(Alert)
     private alertRepository: Repository<Alert>,
-    @InjectRepository(Admin)
-    private adminRepository: Repository<Admin>,
     private mailerService: MailerService,
     private jwtService: JwtService,
   ) {}
@@ -65,28 +62,40 @@ export class AdminService {
     return await this.userRepository.save(user);
   }
 
-  // Find admin by email
-  async findAdminByEmail(email: string): Promise<Admin | null> {
-    return await this.adminRepository.findOne({
-      where: { email }
+  // Find admin by email (admin is a user with admin role)
+  async findAdminByEmail(email: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { email, userType: 'admin' },
+      relations: ['role']
     });
   }
 
-  // Create a new admin
-  async createAdmin(createAdminDto: CreateAdminDto): Promise<Admin> {
+  // Create a new admin (create user with admin role)
+  async createAdmin(createUserDto: CreateUserDto): Promise<User> {
     const bcrypt = require('bcrypt');
     
     // Hash the password
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(createAdminDto.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
     
-    // Create admin with hashed password
-    const admin = this.adminRepository.create({
-      ...createAdminDto,
-      password: hashedPassword
+    // Find admin role
+    const adminRole = await this.roleRepository.findOne({
+      where: { name: 'admin' }
     });
     
-    return await this.adminRepository.save(admin);
+    if (!adminRole) {
+      throw new Error('Admin role not found. Please create admin role first.');
+    }
+    
+    // Create user with admin role
+    const admin = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+      userType: 'admin',
+      roleId: adminRole.id
+    });
+    
+    return await this.userRepository.save(admin);
   }
 
   // Delete a user account
@@ -262,12 +271,13 @@ export class AdminService {
   }
 
   // Admin login method
-  async loginAdmin(loginDto: LoginDto): Promise<{ access_token: string; admin: Omit<Admin, 'password'> }> {
+  async loginAdmin(loginDto: LoginDto): Promise<{ access_token: string; admin: Omit<User, 'password'> }> {
     const bcrypt = require('bcrypt');
     
-    // Find admin by email
-    const admin = await this.adminRepository.findOne({
-      where: { email: loginDto.email }
+    // Find admin by email (user with admin role)
+    const admin = await this.userRepository.findOne({
+      where: { email: loginDto.email, userType: 'admin' },
+      relations: ['role']
     });
 
     if (!admin) {
@@ -285,8 +295,8 @@ export class AdminService {
       sub: admin.id,
       email: admin.email,
       name: admin.name,
-      userType: 'admin',
-      role: 'admin'
+      userType: admin.userType,
+      role: admin.role?.name || 'admin'
     };
 
     // Generate JWT token

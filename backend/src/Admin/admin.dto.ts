@@ -1,21 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString, IsNumber, IsOptional, IsIn, IsBoolean, IsDateString } from 'class-validator';
 
-export class CreateAdminDto {
-  @IsNotEmpty()
-  @IsString()
-  name: string;
-
-  @IsEmail()
-  email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  password: string;
-
-  @IsOptional()
-  @IsString()
-  phoneNumber?: string;
-}
 
 export class LoginDto {
   @IsEmail()

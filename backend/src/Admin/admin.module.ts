@@ -4,7 +4,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { MailerService } from './mailer.service';
-import { Admin } from './entities/admin.entity';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
@@ -13,7 +12,7 @@ import { JwtGuard } from './guards/jwt.guard';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Admin, User, Role, Alert]),
+    TypeOrmModule.forFeature([User, Role, Alert]),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'lifeconnect-secret-key',
       signOptions: { expiresIn: '24h' },

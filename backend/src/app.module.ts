@@ -4,12 +4,15 @@ import { AppService } from './app.service';
 import { ManagerModule } from './Manager/Manager.Module';
 import { AdminModule } from './Admin/admin.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+import * as dotenv from 'dotenv';
+dotenv.config()
 import { DonorModule } from './Donor/donor.module';
 
 @Module({
   imports: [
     ManagerModule,
-    AdminModule,DonorModule,
+    AdminModule, DonorModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any || 'postgres',
       host: process.env.DB_HOST || 'localhost',

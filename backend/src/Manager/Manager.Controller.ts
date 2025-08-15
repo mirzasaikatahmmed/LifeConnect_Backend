@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -20,6 +21,8 @@ import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
 import { ManagerGuard } from './guards/manager.guard';
 import { JwtGuard } from 'src/Admin/guards/jwt.guard';
+import { CreateBloodRequestDto, UpdateBloodRequestDto } from './dto files/bloodrequest.dto';
+import { BloodRequest } from './Entities/bloodrequest.entity';
 
 @Controller('manager')
 export class ManagerController {
@@ -90,4 +93,33 @@ export class ManagerController {
   async sendMail(@Body() body: { email: string; username: string }) {
     return this.managerService.sendWelcomeEmail(body.email, body.username);
   }
+
+  @Post('createbloodrequest')
+  @UseGuards(ManagerGuard)
+  createrequest(@Body() createdata: CreateBloodRequestDto, @Req() req): Promise<{ message: string }> {
+    const managerId = req.user.id;
+    return this.managerService.createbloodrequest(managerId, createdata);
+  }
+
+  @Patch('updatebloodrequest/:id')
+  @UseGuards(ManagerGuard)
+  updateBloodRequest(
+    @Param('id', ParseIntPipe) requestId: number,
+    @Body() updateData: UpdateBloodRequestDto,
+    @Req() req
+  ): Promise<{ message: string, data?: BloodRequest | null }> {
+    const managerId = req.user.id;
+    return this.managerService.updateBloodRequest(requestId, updateData, managerId);
+  }
+
+  @Delete('deletebloodrequest/:id')
+  @UseGuards(ManagerGuard)
+  deleteBloodRequest(
+    @Param('id', ParseIntPipe) requestId: number,
+    @Req() req
+  ): Promise<{ message: string }> {
+    const managerId = req.user.id;
+    return this.managerService.deleteBloodRequest(requestId, managerId);
+  }
+
 }
