@@ -64,4 +64,10 @@ export class DonorController {
   appointments(@Req() req: any) {
     return this.donorService.upcomingAppointments(req.user.sub);
   }
+  // 8) GET /api/donors/requests
+  @UseGuards(JwtGuard)
+  @Get('requests')
+  listActiveRequests(@Req() req: any) {
+    return this.donorService.listActiveRequests();
+  }
 }
