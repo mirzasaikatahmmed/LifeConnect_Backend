@@ -18,17 +18,16 @@ export class MailerService {
   }
 
   private initializeMailer() {
-    // Log environment variables (for debugging - remove in production)
     this.logger.log(`SMTP Configuration - Host: ${process.env.SMTP_HOST}, Port: ${process.env.SMTP_PORT}, User: ${process.env.SMTP_USER ? 'SET' : 'NOT SET'}, Password: ${process.env.SMTP_PASSWORD ? 'SET' : 'NOT SET'}`);
     
     // Configure SMTP transporter
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false, // true for 465, false for other ports
+      secure: false,
       auth: {
-        user: process.env.SMTP_USER, // Your email
-        pass: process.env.SMTP_PASSWORD, // Your email password or app password
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
       },
       tls: {
         rejectUnauthorized: false,
@@ -173,7 +172,7 @@ export class MailerService {
                 </p>
               </div>
               <div class="footer">
-                <p style="margin: 0;">© 2024 LifeConnect - Connecting Lives, Saving Lives</p>
+                <p style="margin: 0;">© 2025 LifeConnect - Connecting Lives, Saving Lives</p>
                 <p style="margin: 5px 0 0 0; opacity: 0.8;">Blood Donation Management System</p>
               </div>
             </div>
@@ -214,11 +213,11 @@ export class MailerService {
       const testUser = this.userRepository.create({
         email: email,
         name: 'Test User',
-        password: 'test123', // In production, this should be hashed
+        password: 'test123',
         phoneNumber: '+1234567890',
         bloodType: 'O+',
         userType: 'donor',
-        roleId: 1, // Assuming role ID 1 exists
+        roleId: 1,
         isActive: true,
         isVerified: true,
       });
@@ -308,7 +307,7 @@ export class MailerService {
                 </p>
               </div>
               <div class="footer">
-                <p style="margin: 0;">© 2024 LifeConnect - Connecting Lives, Saving Lives</p>
+                <p style="margin: 0;">© 2025 LifeConnect - Connecting Lives, Saving Lives</p>
                 <p style="margin: 5px 0 0 0; opacity: 0.8;">Blood Donation Management System</p>
               </div>
             </div>

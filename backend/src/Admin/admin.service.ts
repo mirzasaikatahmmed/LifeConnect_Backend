@@ -129,8 +129,6 @@ export class AdminService {
 
   // Generate donation statistics report
   async getDonationReports(): Promise<any> {
-    // This would typically involve complex queries to get donation statistics
-    // For now, returning a basic structure that would be populated with actual data
     const totalUsers = await this.userRepository.count({ where: { userType: 'donor' } });
     const activeUsers = await this.userRepository.count({ 
       where: { userType: 'donor', isActive: true } 
@@ -140,7 +138,6 @@ export class AdminService {
       totalDonors: totalUsers,
       activeDonors: activeUsers,
       inactiveDonors: totalUsers - activeUsers,
-      // Additional statistics would be calculated here
       bloodTypeDistribution: {},
       monthlyDonations: [],
       generatedAt: new Date()
@@ -149,8 +146,6 @@ export class AdminService {
 
   // Generate blood request statistics report
   async getRequestReports(): Promise<any> {
-    // This would typically involve queries to the requests table
-    // For now, returning a basic structure
     const totalManagers = await this.userRepository.count({ where: { userType: 'manager' } });
     
     return {

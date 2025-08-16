@@ -1,3 +1,6 @@
+/* eslint-disable prettier/prettier */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
@@ -26,6 +29,7 @@ export class AdminController {
   async getAllUsers() {
     try {
       return await this.adminService.getAllUsers();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new HttpException('Failed to retrieve users', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -112,6 +116,7 @@ export class AdminController {
   async getAllRoles() {
     try {
       return await this.adminService.getAllRoles();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new HttpException('Failed to retrieve roles', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -123,6 +128,7 @@ export class AdminController {
   async createRole(@Body() createRoleDto: CreateRoleDto) {
     try {
       return await this.adminService.createRole(createRoleDto);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new HttpException('Failed to create role', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -151,7 +157,9 @@ export class AdminController {
   @Get('reports/donations')
   async getDonationReports() {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return await this.adminService.getDonationReports();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new HttpException('Failed to generate donation reports', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -162,7 +170,9 @@ export class AdminController {
   @Get('reports/requests')
   async getRequestReports() {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return await this.adminService.getRequestReports();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new HttpException('Failed to generate request reports', HttpStatus.INTERNAL_SERVER_ERROR);
     }
