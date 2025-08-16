@@ -226,14 +226,14 @@ Creates a new role in the system.
 #### Request Body
 ```json
 {
-  "name": "Donar",
+  "name": "doner",
   "description": "Blood Donor Role",
   "permissions": ["donate_blood", "view_profile"]
 }
 ```
 
 #### Field Descriptions
-- `name` (string, required): The name of the role
+- `name` (string, required): The name of the role. Must be one of: `"admin"`, `"manager"`, `"doner"`
 - `description` (string, optional): Description of the role and its purpose
 - `permissions` (array, optional): Array of permission strings for the role (defaults to empty array)
 
@@ -244,7 +244,7 @@ Creates a new role in the system.
   "message": "Role created successfully",
   "data": {
     "id": 1,
-    "name": "Donar",
+    "name": "doner",
     "description": "Blood Donor Role",
     "permissions": ["donate_blood", "view_profile"],
     "isActive": true,
