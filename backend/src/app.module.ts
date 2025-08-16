@@ -13,6 +13,7 @@ import { DonorModule } from './Donor/donor.module';
   imports: [
     ManagerModule,
     AdminModule, DonorModule,
+
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any || 'postgres',
       host: process.env.DB_HOST || 'localhost',

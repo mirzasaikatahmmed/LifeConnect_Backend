@@ -16,7 +16,7 @@ import {
 import { ManagerService } from './Manager.Service';
 import { CreateManagerDto } from './dto files/manager.dto';
 import { ManagerEntity } from './Entities/Manager.entity';
-import { CreateRoleDto, CreateUserDto, LoginDto } from 'src/Admin/admin.dto';
+import { CreateRoleDto, CreateUserDto, LoginDto, UpdateUserDto } from 'src/Admin/admin.dto';
 import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
 import { ManagerGuard } from './guards/manager.guard';
@@ -27,10 +27,41 @@ import { BloodRequest } from './Entities/bloodrequest.entity';
 @Controller('manager')
 export class ManagerController {
   constructor(private readonly managerService: ManagerService) { }
+
   @Post('createaccount')
   @UsePipes(new ValidationPipe())
   createaccount(@Body() data: CreateManagerDto): Promise<ManagerEntity> {
     return this.managerService.createaccount(data);
+  }
+
+  @Post('login')
+  @UsePipes(new ValidationPipe())
+  async login(@Body() loginDto: LoginDto) {
+    return this.managerService.login(loginDto.email, loginDto.password);
+  }
+
+  @Get(':id')
+  @UseGuards(ManagerGuard)
+  getManagerById(@Param('id', ParseIntPipe) id: number): Promise<ManagerEntity> {
+    return this.managerService.getManagerById(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(ManagerGuard)
+  async updateManager(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateData: Partial<ManagerEntity>
+  ): Promise<ManagerEntity> {
+    // return this.managerService.updateManager(id, updateData);
+    const update = await this.managerService.updateManager(id, updateData)
+    await this.managerService.sendUpdateEmail(update.email, update.username)
+    return update
+  }
+
+  @Get('allmanagers')
+  @UseGuards(ManagerGuard)
+  getAllManagers() {
+    return this.managerService.getAllManagers();
   }
   // @Post('createaccount')
   // @UsePipes(new ValidationPipe())
@@ -45,50 +76,56 @@ export class ManagerController {
     return this.managerService.createManagerUser(data);
   }
 
-  @Get('allmanagers')
-  @UseGuards(ManagerGuard)
-  getAllManagers() {
-    return this.managerService.getAllManagers();
-  }
-  @Get(':id')
-  @UseGuards(ManagerGuard)
-  getManagerById(@Param('id', ParseIntPipe) id: number): Promise<ManagerEntity> {
-    return this.managerService.getManagerById(id);
-  }
-  @Patch(':id')
-  @UseGuards(ManagerGuard)
-  async updateManager(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Partial<ManagerEntity>
-  ): Promise<ManagerEntity> {
-    // return this.managerService.updateManager(id, updateData);
-    const update = await this.managerService.updateManager(id, updateData)
-    await this.managerService.sendUpdateEmail(update.email, update.username)
-    return update
-  }
-
   @Post('createrole')
   @UsePipes(new ValidationPipe())
   createRole(@Body() data: CreateRoleDto): Promise<Role> {
     return this.managerService.createRole(data);
   }
-  @Delete('users/:id')
-  deleteuser(@Param('id', ParseIntPipe) id: number): any {
-    return this.managerService.deleteuserbyid(id);
+
+  @Post('manageruserlogin')
+  @UsePipes(new ValidationPipe())
+  async manageruserlogin(@Body() loginDto: LoginDto) {
+    return this.managerService.manageruserlogin(loginDto.email, loginDto.password);
   }
+
+  @Delete('users/:id')
+  @UseGuards(ManagerGuard)
+  deleteuser(@Param('id', ParseIntPipe) id: number, @Req() req): any {
+    return this.managerService.deleteUserById(id, req.user);
+  }
+
   @Put('users/:id')
+  @UseGuards(ManagerGuard)
   async updatefulluser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: CreateUserDto,
+    @Req() req
   ) {
-    return this.managerService.updateUser(id, updateData);
+    const updateduserinfo = await this.managerService.updateUser(id, updateData, req.user);
+    await this.managerService.sendUpdateEmail(updateduserinfo.email, updateduserinfo.name);
+    return updateduserinfo;
   }
 
-  @Post('login')
-  @UsePipes(new ValidationPipe())
-  async login(@Body() loginDto: LoginDto) {
-    return this.managerService.login(loginDto.email, loginDto.password);
+  @Patch('users/:id')
+  @UseGuards(ManagerGuard)
+  async updateuserInfo(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateData: UpdateUserDto,
+    @Req() req
+  ) {
+    return await this.managerService.updateUserInfo(id, updateData, req.user);
+    // await this.managerService.sendUpdateEmail(updateduserinfo.email,updateduserinfo.name)
   }
+  @Get('users/managers')
+  @UseGuards(ManagerGuard)
+  async getAlluserManagers() {
+    return this.managerService.getAlluserManagers();
+  }
+
+
+
+
+
   @Post('sendmail')
   async sendMail(@Body() body: { email: string; username: string }) {
     return this.managerService.sendWelcomeEmail(body.email, body.username);
@@ -121,5 +158,11 @@ export class ManagerController {
     const managerId = req.user.id;
     return this.managerService.deleteBloodRequest(requestId, managerId);
   }
+  //request from user table below
+
+
+
+
+
 
 }

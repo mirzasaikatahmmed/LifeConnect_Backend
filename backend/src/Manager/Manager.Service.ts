@@ -4,7 +4,7 @@ import { ManagerEntity } from './Entities/Manager.entity';
 import { Repository } from 'typeorm';
 import { CreateManagerDto } from './dto files/manager.dto';
 import * as bcrypt from 'bcrypt';
-import { CreateRoleDto, CreateUserDto } from 'src/Admin/admin.dto';
+import { CreateRoleDto, CreateUserDto, UpdateUserDto } from 'src/Admin/admin.dto';
 import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
 import { JwtService } from '@nestjs/jwt';
@@ -58,6 +58,7 @@ export class ManagerService {
   async getAllManagers(): Promise<ManagerEntity[]> {
     return await this.managerRepository.find()
   }
+
   async getManagerById(id: number): Promise<ManagerEntity> {
     const manager = await this.managerRepository.findOneBy({ id });
     if (!manager) {
@@ -102,23 +103,81 @@ export class ManagerService {
     });
     return await this.userRepository.save(user);
   }
+
   async createRole(data: CreateRoleDto): Promise<Role> {
     const role = this.roleRepository.create(data);
     return this.roleRepository.save(role);
   }
-  async deleteuserbyid(id: number): Promise<{ messege: string }> {
-    const findid = await this.userRepository.findOneBy({ id })
-    if (!findid) {
+
+  // async deleteuserbyid(id: number): Promise<{ messege: string }> {
+  //   const findid = await this.userRepository.findOneBy({ id })
+  //   if (!findid) {
+  //     throw new NotFoundException("User not found");
+  //   }
+  //   const result = await this.userRepository.delete(id);
+  //   return { messege: "User deleted successfully." }
+  // }
+  //PuT request function(privious updateUser)
+  // async updateUser(id: number, updateData: CreateUserDto): Promise<User> {
+  //   const user = await this.userRepository.findOneBy({ id });
+  //   if (!user) {
+  //     throw new NotFoundException(`User with ID ${id} not found`);
+  //   }
+  //   if (updateData.password) {
+  //     updateData.password = await bcrypt.hash(updateData.password, 10);
+  //   }
+  //   Object.assign(user, updateData);
+  //   return this.userRepository.save(user);
+  // }
+
+  async deleteUserById(id: number, currentUser: any): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
       throw new NotFoundException("User not found");
     }
-    const result = await this.userRepository.delete(id);
-    return { messege: "User deleted successfully." }
+
+    if (currentUser.role === 'manager') {
+      if (currentUser.sub == user.id) {
+
+      }
+      else if (currentUser.sub !== user.id) {
+        throw new UnauthorizedException("Managers can only delete their own account");
+      }
+    } else if (currentUser.role === 'admin') {
+
+    } else {
+      throw new UnauthorizedException("Unauthorized to delete user");
+    }
+
+    await this.userRepository.delete(id);
+    return { message: "User deleted successfully." };
   }
-  //PuT request function
-  async updateUser(id: number, updateData: CreateUserDto): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id });
+
+
+  async updateUser(id: number, updateData: CreateUserDto, currentUser: any): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['role']
+    });
+
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    if (currentUser.role === 'manager') {
+      if (currentUser.sub === user.id) {
+
+      }
+      else if (user.userType !== 'donor') {
+        throw new UnauthorizedException('Managers cannot update other managers or admins');
+      }
+    } else if (currentUser.role === 'admin') {
+
+    } else if (currentUser.role === 'donor') {
+      if (currentUser.sub !== user.id) {
+        throw new UnauthorizedException('Donors can only update their own data');
+      }
+    } else {
+      throw new UnauthorizedException('Unauthorized');
     }
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
@@ -126,6 +185,49 @@ export class ManagerService {
     Object.assign(user, updateData);
     return this.userRepository.save(user);
   }
+
+  async updateUserInfo(
+    id: number,
+    updateData: Partial<UpdateUserDto>,
+    currentUser: any
+  ): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['role']
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Role-based permission checks
+    if (currentUser.role === 'manager') {
+      if (currentUser.sub !== user.id && user.userType !== 'donor') {
+        throw new UnauthorizedException('Managers can only update donors or their own profile');
+      }
+    } else if (currentUser.role === 'admin') {
+      // Admin can update anyone — no restriction here
+    } else if (currentUser.role === 'donor') {
+      if (currentUser.sub !== user.id) {
+        throw new UnauthorizedException('Donors can only update their own data');
+      }
+    } else {
+      throw new UnauthorizedException('Unauthorized');
+    }
+
+    // Merge updated fields
+    Object.assign(user, updateData);
+
+    return this.userRepository.save(user);
+  }
+
+  async getAlluserManagers(): Promise<User[]> {
+    return this.userRepository.find({
+      where: { userType: 'manager' },
+      relations: ['role'], // role details include করতে চাইলে
+    });
+  }
+
 
   async login(email: string, password: string) {
     const manager = await this.managerRepository.findOne({
@@ -170,6 +272,7 @@ export class ManagerService {
     });
     return { message: 'Email sent successfully' };
   }
+
   async sendUpdateEmail(toEmail: string, username: string) {
     await this.mailerService.sendMail({
       from: process.env.SMTP_USER,
@@ -229,4 +332,45 @@ export class ManagerService {
       message: "Blood request deleted successfully"
     };
   }
+
+  async manageruserlogin(email: string, password: string) {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['role'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.role.name !== 'manager') {
+      throw new UnauthorizedException('Access denied: Not a manager');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role.name,
+      userType: user.userType,
+    };
+
+    const token = await this.jwtService.signAsync(payload);
+
+    return {
+      access_token: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role.name,
+      },
+    };
+  }
+
+
 }

@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Role } from './role.entity';
+import { BloodRequest } from 'src/Manager/Entities/bloodrequest.entity';
 
 @Entity('users')
 export class User {
@@ -27,6 +28,9 @@ export class User {
   @ManyToOne(() => Role, { eager: true })
   @JoinColumn({ name: 'roleId' })
   role: Role;
+
+  // @OneToMany(() => BloodRequest, request => request.createdBy)
+  // bloodRequests: BloodRequest[];
 
   @Column()
   roleId: number;

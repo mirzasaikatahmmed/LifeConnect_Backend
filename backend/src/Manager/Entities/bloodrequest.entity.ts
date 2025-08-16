@@ -8,6 +8,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { ManagerEntity } from './Manager.entity';
+import { User } from 'src/Admin/entities/user.entity';
 
 @Entity('bloodrequests')
 export class BloodRequest {
@@ -39,6 +40,14 @@ export class BloodRequest {
     @ManyToOne(() => ManagerEntity)
     @JoinColumn({ name: 'managerId' })
     postedBy: ManagerEntity;
+
+    // @ManyToOne(() => User, { eager: true })
+    // @JoinColumn({ name: 'createdById' })
+    // createdBy: User;
+
+    // @Column()
+    // createdById: number;
+
 
     @Column()
     managerId: number;
