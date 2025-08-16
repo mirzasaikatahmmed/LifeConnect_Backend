@@ -28,10 +28,10 @@ export class DonorService {
     @InjectRepository(BloodRequest)
     private requestRepo: Repository<BloodRequest>,
     private mailer: MailerService,
-  ) {}
+  ) { }
 
   private signToken(payload: any) {
-    const secret = process.env.JWT_SECRET || 'dev_secret';
+    const secret = process.env.JWT_SECRET || 'lifeconnect-secret-key';
     const expiresIn = process.env.JWT_EXPIRES || '7d';
     return jwt.sign(payload, secret, { expiresIn });
   }
@@ -52,11 +52,11 @@ export class DonorService {
     });
     const saved = await this.donorRepo.save(donor);
 
-    // bonus: welcome email (non-blocking)
+    // Send welcome email (non-blocking)
     this.mailer.send(
       saved.email,
       'Welcome to LifeConnect',
-      `<p>Hello ${saved.name || 'Donor'}, welcome to LifeConnect!</p>`,
+      `<p>Hello ${saved.name || 'Donor'}, welcome to LifeConnect! Thank you for registering as a blood donor.</p>`,
     );
 
     return { id: saved.id, email: saved.email };

@@ -20,7 +20,10 @@ export class JwtGuard implements CanActivate {
     const token = auth.slice(7);
 
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET || 'dev_secret');
+      const payload = jwt.verify(
+        token,
+        process.env.JWT_SECRET || 'lifeconnect-secret-key',
+      );
       req.user = payload; // attach decoded payload to request
       return true;
     } catch {

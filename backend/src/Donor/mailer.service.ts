@@ -1,29 +1,26 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { MailerService as NestMailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class MailerService {
-  private transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER || 'you@example.com',
-      pass: process.env.SMTP_PASS || 'password',
-    },
-  });
+  private readonly logger = new Logger(MailerService.name);
+
+  constructor(private readonly mailerService: NestMailerService) { }
 
   async send(to: string, subject: string, html: string) {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      this.logger.warn('SMTP credentials missing — MailerService disabled.');
+      return;
+    }
     try {
-      await this.transporter.sendMail({
-        from:
-          process.env.MAIL_FROM || '"LifeConnect" <no-reply@lifeconnect.com>',
+      await this.mailerService.sendMail({
         to,
         subject,
         html,
       });
-    } catch (e) {
-      Logger.error('Mailer error', e);
+      this.logger.log(`Email sent to ${to}`);
+    } catch (err) {
+      this.logger.error(`Failed to send email to ${to}`, err.stack);
     }
   }
 }
