@@ -16,7 +16,7 @@ import { DonorUpdateDto } from './dto/donor-update.dto';
 import { DonorAvailabilityDto } from './dto/donor-availability.dto';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { MailerService } from './mailer.service';
+//import { MailerService } from './mailer.service';
 
 @Injectable()
 export class DonorService {
@@ -27,8 +27,8 @@ export class DonorService {
     private appointmentRepo: Repository<Appointment>,
     @InjectRepository(BloodRequest)
     private requestRepo: Repository<BloodRequest>,
-    private mailer: MailerService,
-  ) { }
+    //private mailer: MailerService,
+  ) {}
 
   private signToken(payload: any) {
     const secret = process.env.JWT_SECRET || 'lifeconnect-secret-key';
@@ -53,11 +53,11 @@ export class DonorService {
     const saved = await this.donorRepo.save(donor);
 
     // Send welcome email (non-blocking)
-    this.mailer.send(
+    /* this.mailer.send(
       saved.email,
       'Welcome to LifeConnect',
       `<p>Hello ${saved.name || 'Donor'}, welcome to LifeConnect! Thank you for registering as a blood donor.</p>`,
-    );
+    );  */
 
     return { id: saved.id, email: saved.email };
   }
