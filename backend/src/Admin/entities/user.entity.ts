@@ -29,8 +29,8 @@ export class User {
   @JoinColumn({ name: 'roleId' })
   role: Role;
 
-  // @OneToMany(() => BloodRequest, request => request.createdBy)
-  // bloodRequests: BloodRequest[];
+  @OneToMany(() => BloodRequest, request => request.postedBy)
+  bloodRequests: BloodRequest[];
 
   @Column()
   roleId: number;
