@@ -9,7 +9,6 @@ import { Appointment } from './entities/appointment.entity';
 import { Request } from './entities/request.entity';
 import { DonorService } from './donor.service';
 import { DonorController } from './donor.controller';
-import { RequestsController } from './requests.controller';
 import { JwtGuard } from './guards/jwt.guard';
 //import { MailerModule } from '@nestjs-modules/mailer';
 //import { MailerService } from './mailer.service';
@@ -36,7 +35,7 @@ console.log('SMTP_PASS from env:', process.env.SMTP_PASS);
     //     },
     //   }),
   ],
-  controllers: [DonorController, RequestsController],
+  controllers: [DonorController],
   providers: [DonorService, JwtGuard /*MailerService*/],
   exports: [DonorService],
 })
