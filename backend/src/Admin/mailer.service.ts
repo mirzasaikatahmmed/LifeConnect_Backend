@@ -17,7 +17,7 @@ export class MailerService {
     this.initializeMailer();
   }
 
-  private initializeMailer() {
+  private async initializeMailer() {
     this.logger.log(`SMTP Configuration - Host: ${process.env.SMTP_HOST}, Port: ${process.env.SMTP_PORT}, User: ${process.env.SMTP_USER ? 'SET' : 'NOT SET'}, Password: ${process.env.SMTP_PASSWORD ? 'SET' : 'NOT SET'}`);
     
     // Configure SMTP transporter
@@ -33,6 +33,15 @@ export class MailerService {
         rejectUnauthorized: false,
       },
     });
+
+    // Test connection without blocking startup
+    try {
+      await this.transporter.verify();
+      this.logger.log('SMTP transporter ready');
+    } catch (error) {
+      this.logger.error('Transporter is ready error', error.message);
+      this.logger.warn('Email functionality may be limited until SMTP is configured correctly');
+    }
   }
 
   async sendAlertToAllUsers(alert: Alert): Promise<{ success: boolean; message: string; sentCount?: number; failedCount?: number }> {
