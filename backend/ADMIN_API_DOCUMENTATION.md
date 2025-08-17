@@ -564,6 +564,194 @@ Creates a test user and sends a test email.
 
 ---
 
+## Blood Request Management
+
+### Get All Blood Requests
+**GET** `/api/blood-requests`
+🔒 *Requires Admin Authentication*
+
+Retrieves a list of all blood requests in the system.
+
+#### Response
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "bloodType": "O+",
+      "urgencyLevel": "high",
+      "hospitalName": "City General Hospital",
+      "hospitalAddress": "123 Main St, City, State",
+      "status": "active",
+      "neededBy": "2024-12-31T23:59:59.000Z",
+      "unitsNeeded": 5,
+      "userId": 1,
+      "postedBy": {
+        "id": 1,
+        "name": "Manager Name",
+        "email": "manager@hospital.com"
+      },
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Get Blood Request by ID
+**GET** `/api/blood-requests/:id`
+🔒 *Requires Admin Authentication*
+
+Retrieves a specific blood request by its ID.
+
+#### Path Parameters
+- `id` (number): Blood request ID to retrieve
+
+#### Response
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "bloodType": "O+",
+    "urgencyLevel": "high",
+    "hospitalName": "City General Hospital",
+    "hospitalAddress": "123 Main St, City, State",
+    "status": "active",
+    "neededBy": "2024-12-31T23:59:59.000Z",
+    "unitsNeeded": 5,
+    "userId": 1,
+    "postedBy": {
+      "id": 1,
+      "name": "Manager Name",
+      "email": "manager@hospital.com"
+    },
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+### Create Blood Request
+**POST** `/api/blood-requests`
+🔒 *Requires Admin Authentication*
+
+Creates a new blood request in the system.
+
+#### Request Body
+```json
+{
+  "bloodType": "A+",
+  "urgencyLevel": "critical",
+  "hospitalName": "Emergency Medical Center",
+  "hospitalAddress": "456 Emergency Ave, City, State",
+  "neededBy": "2024-12-25T18:00:00.000Z",
+  "unitsNeeded": 3
+}
+```
+
+#### Field Descriptions
+- `bloodType` (string, required): Blood type needed (e.g., "A+", "B+", "O+", "AB+", "A-", "B-", "O-", "AB-")
+- `urgencyLevel` (string, required): Urgency level - one of: "low", "medium", "high", "critical"
+- `hospitalName` (string, required): Name of the hospital requesting blood
+- `hospitalAddress` (string, required): Address of the hospital
+- `neededBy` (Date, required): Deadline when blood is needed
+- `unitsNeeded` (number, optional): Number of units needed (defaults to 1)
+
+#### Response
+```json
+{
+  "success": true,
+  "message": "Blood request created successfully",
+  "data": {
+    "id": 2,
+    "bloodType": "A+",
+    "urgencyLevel": "critical",
+    "hospitalName": "Emergency Medical Center",
+    "hospitalAddress": "456 Emergency Ave, City, State",
+    "status": "active",
+    "neededBy": "2024-12-25T18:00:00.000Z",
+    "unitsNeeded": 3,
+    "userId": 1,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+### Update Blood Request
+**PATCH** `/api/blood-requests/:id`
+🔒 *Requires Admin Authentication*
+
+Updates an existing blood request.
+
+#### Path Parameters
+- `id` (number): Blood request ID to update
+
+#### Request Body
+```json
+{
+  "bloodType": "O-",
+  "urgencyLevel": "high",
+  "hospitalName": "Updated Hospital Name",
+  "hospitalAddress": "Updated Address",
+  "neededBy": "2024-12-30T12:00:00.000Z",
+  "unitsNeeded": 7,
+  "status": "fulfilled"
+}
+```
+
+#### Field Descriptions
+All fields are optional for updates:
+- `bloodType` (string): Blood type needed
+- `urgencyLevel` (string): Urgency level - "low", "medium", "high", "critical"
+- `hospitalName` (string): Hospital name
+- `hospitalAddress` (string): Hospital address
+- `neededBy` (Date): Deadline date
+- `unitsNeeded` (number): Number of units needed
+- `status` (string): Request status - "active", "fulfilled", "cancelled", "expired"
+
+#### Response
+```json
+{
+  "success": true,
+  "message": "Blood request updated successfully",
+  "data": {
+    "id": 1,
+    "bloodType": "O-",
+    "urgencyLevel": "high",
+    "hospitalName": "Updated Hospital Name",
+    "hospitalAddress": "Updated Address",
+    "status": "fulfilled",
+    "neededBy": "2024-12-30T12:00:00.000Z",
+    "unitsNeeded": 7,
+    "userId": 1,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T12:00:00.000Z"
+  }
+}
+```
+
+### Delete Blood Request
+**DELETE** `/api/blood-requests/:id`
+🔒 *Requires Admin Authentication*
+
+Deletes a blood request from the system.
+
+#### Path Parameters
+- `id` (number): Blood request ID to delete
+
+#### Response
+```json
+{
+  "success": true,
+  "message": "Blood request deleted successfully"
+}
+```
+
+---
+
 ## Error Responses
 
 All endpoints may return the following error response format:

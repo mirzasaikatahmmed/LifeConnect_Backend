@@ -1,15 +1,28 @@
-import { ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ManagerEntity } from './Entities/Manager.entity';
 import { Repository } from 'typeorm';
 import { CreateManagerDto } from './dto files/manager.dto';
 import * as bcrypt from 'bcrypt';
-import { CreateRoleDto, CreateUserDto, UpdateUserDto } from 'src/Admin/admin.dto';
+import {
+  CreateRoleDto,
+  CreateUserDto,
+  UpdateUserDto,
+} from 'src/Admin/admin.dto';
 import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '@nestjs-modules/mailer';
-import { CreateBloodRequestDto, UpdateBloodRequestDto } from './dto files/bloodrequest.dto';
+import {
+  CreateBloodRequestDto,
+  UpdateBloodRequestDto,
+} from './dto files/bloodrequest.dto';
 import { BloodRequest } from './Entities/bloodrequest.entity';
 @Injectable()
 export class ManagerService {
@@ -23,8 +36,8 @@ export class ManagerService {
     @InjectRepository(BloodRequest)
     private requestRepository: Repository<BloodRequest>,
     private jwtService: JwtService,
-    private readonly mailerService: MailerService
-  ) { }
+    private readonly mailerService: MailerService,
+  ) {}
   async createaccount(data: CreateManagerDto): Promise<ManagerEntity> {
     const existingUsername = await this.managerRepository.findOne({
       where: { name: data.username },
@@ -54,9 +67,8 @@ export class ManagerService {
     return savedManager;
   }
 
-
   async getAllManagers(): Promise<ManagerEntity[]> {
-    return await this.managerRepository.find()
+    return await this.managerRepository.find();
   }
 
   async getManagerById(id: number): Promise<ManagerEntity> {
@@ -74,8 +86,10 @@ export class ManagerService {
   //   }
   //   return updatedManager;
   // }
-  async updateManager(id: number, updateData: Partial<ManagerEntity>): Promise<ManagerEntity> {
-
+  async updateManager(
+    id: number,
+    updateData: Partial<ManagerEntity>,
+  ): Promise<ManagerEntity> {
     if (updateData.password) {
       const saltRounds = 10;
       updateData.password = await bcrypt.hash(updateData.password, saltRounds);
@@ -88,7 +102,6 @@ export class ManagerService {
     return updatedManager;
   }
 
-
   async createManagerUser(data: CreateUserDto): Promise<User> {
     const role = await this.roleRepository.findOneBy({ id: data.roleId });
     console.log('Role found:', role);
@@ -99,7 +112,7 @@ export class ManagerService {
     const user = this.userRepository.create({
       ...data,
       password: hashedPassword,
-      // userType: 'manager', 
+      // userType: 'manager',
     });
     return await this.userRepository.save(user);
   }
@@ -130,34 +143,39 @@ export class ManagerService {
   //   return this.userRepository.save(user);
   // }
 
-  async deleteUserById(id: number, currentUser: any): Promise<{ message: string }> {
+  async deleteUserById(
+    id: number,
+    currentUser: any,
+  ): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new NotFoundException('User not found');
     }
 
     if (currentUser.role === 'manager') {
       if (currentUser.sub == user.id) {
-
-      }
-      else if (currentUser.sub !== user.id) {
-        throw new UnauthorizedException("Managers can only delete their own account");
+      } else if (currentUser.sub !== user.id) {
+        throw new UnauthorizedException(
+          'Managers can only delete their own account',
+        );
       }
     } else if (currentUser.role === 'admin') {
-
     } else {
-      throw new UnauthorizedException("Unauthorized to delete user");
+      throw new UnauthorizedException('Unauthorized to delete user');
     }
 
     await this.userRepository.delete(id);
-    return { message: "User deleted successfully." };
+    return { message: 'User deleted successfully.' };
   }
 
-
-  async updateUser(id: number, updateData: CreateUserDto, currentUser: any): Promise<User> {
+  async updateUser(
+    id: number,
+    updateData: CreateUserDto,
+    currentUser: any,
+  ): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['role']
+      relations: ['role'],
     });
 
     if (!user) {
@@ -165,16 +183,17 @@ export class ManagerService {
     }
     if (currentUser.role === 'manager') {
       if (currentUser.sub === user.id) {
-
-      }
-      else if (user.userType !== 'donor') {
-        throw new UnauthorizedException('Managers cannot update other managers or admins');
+      } else if (user.userType !== 'donor') {
+        throw new UnauthorizedException(
+          'Managers cannot update other managers or admins',
+        );
       }
     } else if (currentUser.role === 'admin') {
-
     } else if (currentUser.role === 'donor') {
       if (currentUser.sub !== user.id) {
-        throw new UnauthorizedException('Donors can only update their own data');
+        throw new UnauthorizedException(
+          'Donors can only update their own data',
+        );
       }
     } else {
       throw new UnauthorizedException('Unauthorized');
@@ -189,11 +208,11 @@ export class ManagerService {
   async updateUserInfo(
     id: number,
     updateData: Partial<UpdateUserDto>,
-    currentUser: any
+    currentUser: any,
   ): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
-      relations: ['role']
+      relations: ['role'],
     });
 
     if (!user) {
@@ -203,13 +222,17 @@ export class ManagerService {
     // Role-based permission checks
     if (currentUser.role === 'manager') {
       if (currentUser.sub !== user.id && user.userType !== 'donor') {
-        throw new UnauthorizedException('Managers can only update donors or their own profile');
+        throw new UnauthorizedException(
+          'Managers can only update donors or their own profile',
+        );
       }
     } else if (currentUser.role === 'admin') {
       // Admin can update anyone — no restriction here
     } else if (currentUser.role === 'donor') {
       if (currentUser.sub !== user.id) {
-        throw new UnauthorizedException('Donors can only update their own data');
+        throw new UnauthorizedException(
+          'Donors can only update their own data',
+        );
       }
     } else {
       throw new UnauthorizedException('Unauthorized');
@@ -228,10 +251,9 @@ export class ManagerService {
     });
   }
 
-
   async login(email: string, password: string) {
     const manager = await this.managerRepository.findOne({
-      where: { email }
+      where: { email },
     });
 
     if (!manager) {
@@ -248,8 +270,8 @@ export class ManagerService {
       id: manager.id,
       email: manager.email,
       username: manager.name,
-      role: manager.role, // 'manager' 
-      userType: 'manager'
+      role: manager.role, // 'manager'
+      userType: 'manager',
     };
 
     return {
@@ -258,8 +280,8 @@ export class ManagerService {
         id: manager.id,
         username: manager.name,
         email: manager.email,
-        role: manager.role
-      }
+        role: manager.role,
+      },
     };
   }
 
@@ -289,7 +311,10 @@ export class ManagerService {
   //   const post = await this.requestRepository.save(createdata);
   //   return { message: "Blood request Posted", data: post }
   // }
-  async createbloodrequest(userId: number, createdata: CreateBloodRequestDto): Promise<{ message: string, data?: BloodRequest }> {
+  async createbloodrequest(
+    userId: number,
+    createdata: CreateBloodRequestDto,
+  ): Promise<{ message: string; data?: BloodRequest }> {
     const bloodRequestData = {
       ...createdata,
       userId,
@@ -297,40 +322,49 @@ export class ManagerService {
     };
 
     const post = await this.requestRepository.save(bloodRequestData);
-    return { message: "Blood request Posted", data: post };
+    return { message: 'Blood request Posted', data: post };
   }
 
-  async updateBloodRequest(requestId: number, updateData: UpdateBloodRequestDto, userId: number): Promise<{ message: string, data?: BloodRequest | null }> {
+  async updateBloodRequest(
+    requestId: number,
+    updateData: UpdateBloodRequestDto,
+    userId: number,
+  ): Promise<{ message: string; data?: BloodRequest | null }> {
     const existingRequest = await this.requestRepository.findOne({
-      where: { id: requestId, userId }
+      where: { id: requestId, userId },
     });
     if (!existingRequest) {
-      throw new NotFoundException(`Blood request with ID ${requestId} not found or you don't have permission to update it`);
+      throw new NotFoundException(
+        `Blood request with ID ${requestId} not found or you don't have permission to update it`,
+      );
     }
     await this.requestRepository.update(requestId, updateData);
     const updatedRequest = await this.requestRepository.findOne({
       where: { id: requestId },
-      relations: ['postedBy']
+      relations: ['postedBy'],
     });
     return {
-      message: "Blood request updated successfully",
-      data: updatedRequest
+      message: 'Blood request updated successfully',
+      data: updatedRequest,
     };
   }
 
-  async deleteBloodRequest(requestId: number, userId: number): Promise<{ message: string }> {
+  async deleteBloodRequest(
+    requestId: number,
+    userId: number,
+  ): Promise<{ message: string }> {
     const existingRequest = await this.requestRepository.findOne({
-      where: { id: requestId, userId }
+      where: { id: requestId, userId },
     });
     if (!existingRequest) {
       throw new NotFoundException(
-        `Blood request with ID ${requestId} not found or you don't have permission to delete it`
+        `Blood request with ID ${requestId} not found or you don't have permission to delete it`,
       );
     }
     await this.requestRepository.delete(requestId);
     console.log(`Blood request ID ${requestId} deleted by user ${userId}`);
     return {
-      message: "Blood request deleted successfully"
+      message: 'Blood request deleted successfully',
     };
   }
 
@@ -372,5 +406,4 @@ export class ManagerService {
       },
     };
   }
-
 }

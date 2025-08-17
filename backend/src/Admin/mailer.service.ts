@@ -18,8 +18,10 @@ export class MailerService {
   }
 
   private async initializeMailer() {
-    this.logger.log(`SMTP Configuration - Host: ${process.env.SMTP_HOST}, Port: ${process.env.SMTP_PORT}, User: ${process.env.SMTP_USER ? 'SET' : 'NOT SET'}, Password: ${process.env.SMTP_PASSWORD ? 'SET' : 'NOT SET'}`);
-    
+    this.logger.log(
+      `SMTP Configuration - Host: ${process.env.SMTP_HOST}, Port: ${process.env.SMTP_PORT}, User: ${process.env.SMTP_USER ? 'SET' : 'NOT SET'}, Password: ${process.env.SMTP_PASSWORD ? 'SET' : 'NOT SET'}`,
+    );
+
     // Configure SMTP transporter
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -40,11 +42,18 @@ export class MailerService {
       this.logger.log('SMTP transporter ready');
     } catch (error) {
       this.logger.error('Transporter is ready error', error.message);
-      this.logger.warn('Email functionality may be limited until SMTP is configured correctly');
+      this.logger.warn(
+        'Email functionality may be limited until SMTP is configured correctly',
+      );
     }
   }
 
-  async sendAlertToAllUsers(alert: Alert): Promise<{ success: boolean; message: string; sentCount?: number; failedCount?: number }> {
+  async sendAlertToAllUsers(alert: Alert): Promise<{
+    success: boolean;
+    message: string;
+    sentCount?: number;
+    failedCount?: number;
+  }> {
     try {
       // Get all active users with email addresses
       const users = await this.userRepository.find({
@@ -62,7 +71,9 @@ export class MailerService {
       // Filter users based on target audience if specified
       let targetUsers = users;
       if (alert.targetAudience && alert.targetAudience !== 'all') {
-        targetUsers = users.filter(user => user.userType === alert.targetAudience);
+        targetUsers = users.filter(
+          (user) => user.userType === alert.targetAudience,
+        );
       }
 
       if (targetUsers.length === 0) {
@@ -73,16 +84,22 @@ export class MailerService {
       }
 
       // Send emails to all target users
-      const emailPromises = targetUsers.map(user => 
-        this.sendEmailToUser(user.email, user.name, alert)
+      const emailPromises = targetUsers.map((user) =>
+        this.sendEmailToUser(user.email, user.name, alert),
       );
 
       const results = await Promise.allSettled(emailPromises);
-      
-      const successCount = results.filter(result => result.status === 'fulfilled').length;
-      const failedCount = results.filter(result => result.status === 'rejected').length;
 
-      this.logger.log(`Alert email sent: ${successCount} successful, ${failedCount} failed`);
+      const successCount = results.filter(
+        (result) => result.status === 'fulfilled',
+      ).length;
+      const failedCount = results.filter(
+        (result) => result.status === 'rejected',
+      ).length;
+
+      this.logger.log(
+        `Alert email sent: ${successCount} successful, ${failedCount} failed`,
+      );
 
       return {
         success: successCount > 0,
@@ -90,7 +107,6 @@ export class MailerService {
         sentCount: successCount,
         failedCount: failedCount,
       };
-
     } catch (error) {
       this.logger.error('Error sending alert emails:', error);
       return {
@@ -100,20 +116,24 @@ export class MailerService {
     }
   }
 
-  private async sendEmailToUser(email: string, userName: string, alert: Alert): Promise<void> {
+  private async sendEmailToUser(
+    email: string,
+    userName: string,
+    alert: Alert,
+  ): Promise<void> {
     try {
       const alertTypeColor = {
-        'info': '#17a2b8',
-        'warning': '#ffc107',
-        'error': '#dc3545',
-        'success': '#28a745'
+        info: '#17a2b8',
+        warning: '#ffc107',
+        error: '#dc3545',
+        success: '#28a745',
       };
 
       const priorityText = {
         0: 'Low',
-        1: 'Medium', 
+        1: 'Medium',
         2: 'High',
-        3: 'Critical'
+        3: 'Critical',
       };
 
       const mailOptions = {
@@ -212,7 +232,9 @@ export class MailerService {
   async createTestUser(email: string): Promise<User> {
     try {
       // Check if user already exists
-      const existingUser = await this.userRepository.findOne({ where: { email } });
+      const existingUser = await this.userRepository.findOne({
+        where: { email },
+      });
       if (existingUser) {
         this.logger.log(`Test user ${email} already exists`);
         return existingUser;
@@ -240,7 +262,10 @@ export class MailerService {
     }
   }
 
-  async sendTestEmail(email: string, userName: string): Promise<{ success: boolean; message: string }> {
+  async sendTestEmail(
+    email: string,
+    userName: string,
+  ): Promise<{ success: boolean; message: string }> {
     try {
       const mailOptions = {
         from: `"LifeConnect Test System" <${process.env.SMTP_USER}>`,

@@ -6,16 +6,17 @@ import { AdminModule } from './Admin/admin.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import * as dotenv from 'dotenv';
-dotenv.config()
+dotenv.config();
 import { DonorModule } from './Donor/donor.module';
 
 @Module({
   imports: [
     ManagerModule,
-    AdminModule, DonorModule,
+    AdminModule,
+    DonorModule,
 
     TypeOrmModule.forRoot({
-      type: process.env.DB_TYPE as any || 'postgres',
+      type: (process.env.DB_TYPE as any) || 'postgres',
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432'),
       username: process.env.DB_USERNAME || 'postgres',
@@ -28,4 +29,4 @@ import { DonorModule } from './Donor/donor.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

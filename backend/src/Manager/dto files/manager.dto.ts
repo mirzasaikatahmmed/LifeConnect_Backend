@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, MinLength, Matches, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  MinLength,
+  Matches,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateManagerDto {
   @IsNotEmpty({ message: 'Username is required' })
@@ -27,11 +33,11 @@ export class LoginManagerDto {
   password: string;
 }
 
-
 export class UpdateManagerDto {
   @IsOptional()
   @Matches(/^[A-Za-z]+$/, {
-    message: 'Username must contain only alphabets, no numbers or special characters',
+    message:
+      'Username must contain only alphabets, no numbers or special characters',
   })
   username?: string;
 

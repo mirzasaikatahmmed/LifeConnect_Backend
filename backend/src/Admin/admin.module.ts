@@ -7,12 +7,13 @@ import { MailerService } from './mailer.service';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
+import { BloodRequest } from '../Manager/Entities/bloodrequest.entity';
 import { AdminGuard } from './guards/admin.guard';
 import { JwtGuard } from './guards/jwt.guard';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, Alert]),
+    TypeOrmModule.forFeature([User, Role, Alert, BloodRequest]),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'lifeconnect-secret-key',
       signOptions: { expiresIn: '24h' },

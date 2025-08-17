@@ -1,5 +1,13 @@
-import { IsEmail, IsNotEmpty, IsString, IsNumber, IsOptional, IsIn, IsBoolean, IsDateString } from 'class-validator';
-
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsIn,
+  IsBoolean,
+  IsDateString,
+} from 'class-validator';
 
 export class LoginDto {
   @IsEmail()
@@ -104,7 +112,7 @@ export class UpdateUserDto {
 export class CreateRoleDto {
   @IsNotEmpty()
   @IsString()
-  @IsIn(['admin','manager','doner'])
+  @IsIn(['admin', 'manager', 'doner'])
   name: string;
 
   @IsOptional()
