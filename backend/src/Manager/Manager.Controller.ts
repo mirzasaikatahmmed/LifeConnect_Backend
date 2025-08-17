@@ -54,7 +54,7 @@ export class ManagerController {
   ): Promise<ManagerEntity> {
     // return this.managerService.updateManager(id, updateData);
     const update = await this.managerService.updateManager(id, updateData)
-    await this.managerService.sendUpdateEmail(update.email, update.username)
+    await this.managerService.sendUpdateEmail(update.email, update.name)
     return update
   }
 
@@ -67,7 +67,7 @@ export class ManagerController {
   // @UsePipes(new ValidationPipe())
   // async createaccount(@Body() data: CreateManagerDto): Promise<ManagerEntity> {
   //   const newManager = await this.managerService.createaccount(data);
-  //   await this.managerService.sendWelcomeEmail(newManager.email, newManager.username);
+  //   await this.managerService.sendWelcomeEmail(newManager.email, newManager.name);
   //   return newManager;
   // }
   @Post('createmanagerUser')
@@ -134,8 +134,8 @@ export class ManagerController {
   @Post('createbloodrequest')
   @UseGuards(ManagerGuard)
   createrequest(@Body() createdata: CreateBloodRequestDto, @Req() req): Promise<{ message: string }> {
-    const managerId = req.user.id;
-    return this.managerService.createbloodrequest(managerId, createdata);
+    const userId = req.user.id || req.user.sub;
+    return this.managerService.createbloodrequest(userId, createdata);
   }
 
   @Patch(' /:id')
@@ -145,8 +145,8 @@ export class ManagerController {
     @Body() updateData: UpdateBloodRequestDto,
     @Req() req
   ): Promise<{ message: string, data?: BloodRequest | null }> {
-    const managerId = req.user.id;
-    return this.managerService.updateBloodRequest(requestId, updateData, managerId);
+    const userId = req.user.id || req.user.sub;
+    return this.managerService.updateBloodRequest(requestId, updateData, userId);
   }
 
   @Delete('deletebloodrequest/:id')
@@ -155,14 +155,9 @@ export class ManagerController {
     @Param('id', ParseIntPipe) requestId: number,
     @Req() req
   ): Promise<{ message: string }> {
-    const managerId = req.user.id;
-    return this.managerService.deleteBloodRequest(requestId, managerId);
+    const userId = req.user.id || req.user.sub;
+    return this.managerService.deleteBloodRequest(requestId, userId);
   }
   //request from user table below
-
-
-
-
-
 
 }

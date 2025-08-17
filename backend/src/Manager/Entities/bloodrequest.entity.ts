@@ -36,21 +36,13 @@ export class BloodRequest {
     @Column({ default: 1 })
     unitsNeeded: number; // How many units of blood needed
 
-    // Many-to-One relationship with Manager
+    // Many-to-One relationship with User
     @ManyToOne(() => ManagerEntity)
-    @JoinColumn({ name: 'managerId' })
+    @JoinColumn({ name: 'userId' })
     postedBy: ManagerEntity;
 
-    // @ManyToOne(() => User, { eager: true })
-    // @JoinColumn({ name: 'createdById' })
-    // createdBy: User;
-
-    // @Column()
-    // createdById: number;
-
-
     @Column()
-    managerId: number;
+    userId: number;
 
     @CreateDateColumn()
     createdAt: Date;

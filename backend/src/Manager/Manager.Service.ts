@@ -27,7 +27,7 @@ export class ManagerService {
   ) { }
   async createaccount(data: CreateManagerDto): Promise<ManagerEntity> {
     const existingUsername = await this.managerRepository.findOne({
-      where: { username: data.username },
+      where: { name: data.username },
     });
     if (existingUsername) {
       throw new ConflictException('Username already exists!!');
@@ -42,14 +42,14 @@ export class ManagerService {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(data.password, saltRounds);
     const manager = this.managerRepository.create({
-      username: data.username,
+      name: data.username,
       password: hashedPassword,
       phoneNumber: data.phoneNumber,
       email: data.email,
     });
     const savedManager = await this.managerRepository.save(manager);
 
-    console.log(`Manager ${savedManager.username} is created successfully!`);
+    console.log(`Manager ${savedManager.name} is created successfully!`);
 
     return savedManager;
   }
@@ -237,9 +237,10 @@ export class ManagerService {
     }
 
     const payload = {
+      sub: manager.id,
       id: manager.id,
       email: manager.email,
-      username: manager.username,
+      username: manager.name,
       role: manager.role, // 'manager' 
       userType: 'manager'
     };
@@ -248,7 +249,7 @@ export class ManagerService {
       access_token: this.jwtService.sign(payload),
       manager: {
         id: manager.id,
-        username: manager.username,
+        username: manager.name,
         email: manager.email,
         role: manager.role
       }
@@ -281,10 +282,10 @@ export class ManagerService {
   //   const post = await this.requestRepository.save(createdata);
   //   return { message: "Blood request Posted", data: post }
   // }
-  async createbloodrequest(managerId: number, createdata: CreateBloodRequestDto): Promise<{ message: string, data?: BloodRequest }> {
+  async createbloodrequest(userId: number, createdata: CreateBloodRequestDto): Promise<{ message: string, data?: BloodRequest }> {
     const bloodRequestData = {
       ...createdata,
-      managerId,
+      userId,
       // neededBy: new Date(createdata.neededBy) // Convert string to Date
     };
 
@@ -292,9 +293,9 @@ export class ManagerService {
     return { message: "Blood request Posted", data: post };
   }
 
-  async updateBloodRequest(requestId: number, updateData: UpdateBloodRequestDto, managerId: number): Promise<{ message: string, data?: BloodRequest | null }> {
+  async updateBloodRequest(requestId: number, updateData: UpdateBloodRequestDto, userId: number): Promise<{ message: string, data?: BloodRequest | null }> {
     const existingRequest = await this.requestRepository.findOne({
-      where: { id: requestId, managerId }
+      where: { id: requestId, userId }
     });
     if (!existingRequest) {
       throw new NotFoundException(`Blood request with ID ${requestId} not found or you don't have permission to update it`);
@@ -310,9 +311,9 @@ export class ManagerService {
     };
   }
 
-  async deleteBloodRequest(requestId: number, managerId: number): Promise<{ message: string }> {
+  async deleteBloodRequest(requestId: number, userId: number): Promise<{ message: string }> {
     const existingRequest = await this.requestRepository.findOne({
-      where: { id: requestId, managerId }
+      where: { id: requestId, userId }
     });
     if (!existingRequest) {
       throw new NotFoundException(
@@ -320,7 +321,7 @@ export class ManagerService {
       );
     }
     await this.requestRepository.delete(requestId);
-    console.log(`Blood request ID ${requestId} deleted by manager ${managerId}`);
+    console.log(`Blood request ID ${requestId} deleted by user ${userId}`);
     return {
       message: "Blood request deleted successfully"
     };
@@ -364,6 +365,5 @@ export class ManagerService {
       },
     };
   }
-
 
 }
