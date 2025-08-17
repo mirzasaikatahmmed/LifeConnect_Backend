@@ -37,7 +37,7 @@ export class ManagerService {
     private requestRepository: Repository<BloodRequest>,
     private jwtService: JwtService,
     private readonly mailerService: MailerService,
-  ) {}
+  ) { }
   async createaccount(data: CreateManagerDto): Promise<ManagerEntity> {
     const existingUsername = await this.managerRepository.findOne({
       where: { name: data.username },
@@ -86,10 +86,7 @@ export class ManagerService {
   //   }
   //   return updatedManager;
   // }
-  async updateManager(
-    id: number,
-    updateData: Partial<ManagerEntity>,
-  ): Promise<ManagerEntity> {
+  async updateManager(id: number, updateData: Partial<ManagerEntity>,): Promise<ManagerEntity> {
     if (updateData.password) {
       const saltRounds = 10;
       updateData.password = await bcrypt.hash(updateData.password, saltRounds);
@@ -419,5 +416,18 @@ export class ManagerService {
         role: user.role.name,
       },
     };
+  }
+  async getallrequest(userId: number): Promise<BloodRequest[]> {
+    const requests = await this.requestRepository.find(
+      {
+        where:
+        {
+          userId: userId
+        }
+      })
+    if (!requests || requests.length === 0) {
+      throw new NotFoundException(`You have not created any requests yet.`);
+    }
+    return requests;
   }
 }

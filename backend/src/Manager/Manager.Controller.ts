@@ -34,7 +34,7 @@ import { BloodRequest } from './Entities/bloodrequest.entity';
 
 @Controller('manager')
 export class ManagerController {
-  constructor(private readonly managerService: ManagerService) {}
+  constructor(private readonly managerService: ManagerService) { }
 
   @Post('createaccount')
   @UsePipes(new ValidationPipe())
@@ -182,4 +182,12 @@ export class ManagerController {
     return this.managerService.deleteBloodRequest(requestId, userId);
   }
   //request from user table below
+
+  @Get('request/allrequests')
+  @UseGuards(ManagerGuard)
+  getallrequestbyid(@Req() req): Promise<BloodRequest[]> {
+    const userId = req.user.id || req.user.sub;
+    return this.managerService.getallrequest(userId)
+  }
+
 }
