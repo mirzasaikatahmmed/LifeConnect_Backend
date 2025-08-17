@@ -5,15 +5,15 @@ import {
   CreateDateColumn,
   Column,
 } from 'typeorm';
-import { Donor } from './donor.entity';
+import { User } from '../../Admin/entities/user.entity';
 
-@Entity()
-export class Donation {
+@Entity('blood_donation_history')
+export class BloodDonationHistory {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Donor, (d) => d.donations, { onDelete: 'CASCADE' })
-  donor: Donor;
+  @ManyToOne(() => User, (user) => user.bloodDonationHistory, { onDelete: 'CASCADE' })
+  user: User;
 
   @Column({ type: 'varchar', length: 100 })
   centerName: string;

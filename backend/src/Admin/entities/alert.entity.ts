@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { User } from './user.entity';
 
 @Entity('alerts')
 export class Alert {
@@ -34,6 +37,14 @@ export class Alert {
 
   @Column({ default: true })
   isSystemWide: boolean;
+
+  // Foreign key to User (Admin who created the alert)
+  @Column({ nullable: true })
+  userId: number;
+
+  @ManyToOne(() => User, (user) => user.alerts, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'userId' })
+  createdBy: User;
 
   @CreateDateColumn()
   createdAt: Date;

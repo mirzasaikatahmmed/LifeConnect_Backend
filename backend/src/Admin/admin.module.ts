@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { AlertController } from './alert.controller';
+import { AlertService } from './alert.service';
 import { MailerService } from './mailer.service';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
@@ -19,8 +21,8 @@ import { JwtGuard } from './guards/jwt.guard';
       signOptions: { expiresIn: '24h' },
     }),
   ],
-  controllers: [AdminController],
-  providers: [AdminService, MailerService, AdminGuard, JwtGuard],
+  controllers: [AdminController, AlertController],
+  providers: [AdminService, AlertService, MailerService, AdminGuard, JwtGuard],
   exports: [AdminService, MailerService, TypeOrmModule],
 })
 export class AdminModule {}

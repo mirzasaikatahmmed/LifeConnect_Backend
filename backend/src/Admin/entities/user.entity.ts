@@ -10,6 +10,8 @@ import {
 } from 'typeorm';
 import { Role } from './role.entity';
 import { BloodRequest } from 'src/Manager/Entities/bloodrequest.entity';
+import { BloodDonationHistory } from 'src/Donor/entities/blooddonationhistory.entity';
+import { Alert } from './alert.entity';
 
 @Entity('users')
 export class User {
@@ -40,6 +42,12 @@ export class User {
 
   @OneToMany(() => BloodRequest, (request) => request.postedBy)
   bloodRequests: BloodRequest[];
+
+  @OneToMany(() => BloodDonationHistory, (bloodDonationHistory) => bloodDonationHistory.user)
+  bloodDonationHistory: BloodDonationHistory[];
+
+  @OneToMany(() => Alert, (alert) => alert.createdBy)
+  alerts: Alert[];
 
   @Column()
   roleId: number;

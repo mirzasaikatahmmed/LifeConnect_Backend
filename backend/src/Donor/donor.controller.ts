@@ -4,6 +4,9 @@ import {
   Get,
   Patch,
   Post,
+  Put,
+  Delete,
+  Param,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -58,16 +61,46 @@ export class DonorController {
     return this.donorService.availability(req.user.sub, dto);
   }
 
-  // 7) GET /api/donors/appointments
-  @UseGuards(JwtGuard)
-  @Get('appointments')
-  appointments(@Req() req: any) {
-    return this.donorService.upcomingAppointments(req.user.sub);
-  }
   // 8) GET /api/donors/requests
   @UseGuards(JwtGuard)
   @Get('requests')
   listActiveRequests(@Req() req: any) {
     return this.donorService.listActiveRequests();
+  }
+
+  // History Routes
+  // 9) POST /api/donors/history
+  @UseGuards(JwtGuard)
+  @Post('history')
+  createHistory(@Req() req: any, @Body() historyData: any) {
+    return this.donorService.createHistory(req.user.sub, historyData);
+  }
+
+  // 10) GET /api/donors/history/:id
+  @UseGuards(JwtGuard)
+  @Get('history/:id')
+  getHistoryById(@Req() req: any, @Param('id') id: number) {
+    return this.donorService.getHistoryById(req.user.sub, id);
+  }
+
+  // 11) PUT /api/donors/history/:id
+  @UseGuards(JwtGuard)
+  @Put('history/:id')
+  updateHistory(@Req() req: any, @Param('id') id: number, @Body() historyData: any) {
+    return this.donorService.updateHistory(req.user.sub, id, historyData);
+  }
+
+  // 12) PATCH /api/donors/history/:id
+  @UseGuards(JwtGuard)
+  @Patch('history/:id')
+  patchHistory(@Req() req: any, @Param('id') id: number, @Body() historyData: any) {
+    return this.donorService.patchHistory(req.user.sub, id, historyData);
+  }
+
+  // 13) DELETE /api/donors/history/:id
+  @UseGuards(JwtGuard)
+  @Delete('history/:id')
+  deleteHistory(@Req() req: any, @Param('id') id: number) {
+    return this.donorService.deleteHistory(req.user.sub, id);
   }
 }
