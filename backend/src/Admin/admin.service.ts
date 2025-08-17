@@ -9,6 +9,7 @@ import {
   CreateAlertDto,
   SendAlertEmailDto,
   CreateUserDto,
+  UpdateUserDto,
   LoginDto,
   CreateRoleDto,
 } from './admin.dto';
@@ -62,6 +63,17 @@ export class AdminService {
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const bcrypt = require('bcrypt');
 
+    // Validate that the role exists
+    const role = await this.roleRepository.findOne({
+      where: { id: createUserDto.roleId, isActive: true },
+    });
+
+    if (!role) {
+      throw new Error(
+        `Role with ID ${createUserDto.roleId} not found or inactive`,
+      );
+    }
+
     // Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(
@@ -75,7 +87,14 @@ export class AdminService {
       password: hashedPassword,
     });
 
-    return await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Return user with role information populated
+    const userWithRole = await this.findUserById(savedUser.id);
+    if (!userWithRole) {
+      throw new Error('Failed to retrieve created user');
+    }
+    return userWithRole;
   }
 
   // Find admin by email (admin is a user with admin role)
@@ -115,6 +134,12 @@ export class AdminService {
     });
 
     return await this.userRepository.save(admin);
+  }
+
+  // Update a user account
+  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User | null> {
+    await this.userRepository.update(id, updateUserDto);
+    return await this.findUserById(id);
   }
 
   // Delete a user account

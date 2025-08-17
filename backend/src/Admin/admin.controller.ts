@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
  
  
-import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Patch, Put, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
+import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, UpdateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
 import { CreateBloodRequestDto, UpdateBloodRequestDto } from '../Manager/dto files/bloodrequest.dto';
 
@@ -90,6 +90,24 @@ export class AdminController {
         throw error;
       }
       throw new HttpException('Failed to create admin', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PUT /api/users/:id - Updates a user account
+  @UseGuards(AdminGuard)
+  @Put('users/:id')
+  async updateUser(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.updateUser(id, updateUserDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to update user', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

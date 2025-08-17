@@ -21,7 +21,8 @@ import { MailerService } from './mailer.service';
 export class DonorService {
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
-    @InjectRepository(BloodDonationHistory) private bloodDonationHistoryRepo: Repository<BloodDonationHistory>,
+    @InjectRepository(BloodDonationHistory)
+    private bloodDonationHistoryRepo: Repository<BloodDonationHistory>,
     @InjectRepository(BloodRequest)
     private requestRepo: Repository<BloodRequest>,
     private mailer: MailerService,
@@ -52,18 +53,15 @@ export class DonorService {
     const saved = await this.userRepo.save(user);
 
     // Send welcome email
-    await this.mailer.sendWelcomeEmail(
-      saved.email,
-      saved.name,
-    );
+    await this.mailer.sendWelcomeEmail(saved.email, saved.name);
 
     return { id: saved.id, email: saved.email };
   }
 
   async login(dto: DonorLoginDto) {
-    const user = await this.userRepo.findOne({ 
+    const user = await this.userRepo.findOne({
       where: { email: dto.email, userType: 'donor' },
-      relations: ['role']
+      relations: ['role'],
     });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
@@ -79,9 +77,9 @@ export class DonorService {
   }
 
   async me(userId: number) {
-    const user = await this.userRepo.findOne({ 
+    const user = await this.userRepo.findOne({
       where: { id: userId, userType: 'donor' },
-      relations: ['role']
+      relations: ['role'],
     });
     if (!user) throw new NotFoundException('User not found');
 
@@ -90,8 +88,8 @@ export class DonorService {
   }
 
   async updateProfile(userId: number, dto: DonorUpdateDto) {
-    const user = await this.userRepo.findOne({ 
-      where: { id: userId, userType: 'donor' }
+    const user = await this.userRepo.findOne({
+      where: { id: userId, userType: 'donor' },
     });
     if (!user) throw new NotFoundException('User not found');
 
@@ -117,7 +115,6 @@ export class DonorService {
     return { success: true, message: 'Availability updated' };
   }
 
-
   async listActiveRequests() {
     return this.requestRepo.find({
       where: { status: 'active' },
@@ -127,8 +124,8 @@ export class DonorService {
 
   // Donation History CRUD operations (replacing History entity)
   async createHistory(userId: number, donationData: any) {
-    const user = await this.userRepo.findOne({ 
-      where: { id: userId, userType: 'donor' }
+    const user = await this.userRepo.findOne({
+      where: { id: userId, userType: 'donor' },
     });
     if (!user) throw new NotFoundException('User not found');
 
@@ -146,8 +143,9 @@ export class DonorService {
       where: { id: donationId, user: { id: userId } },
       relations: ['user'],
     });
-    
-    if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
+
+    if (!bloodDonation)
+      throw new NotFoundException('Blood donation record not found');
     return bloodDonation;
   }
 
@@ -155,10 +153,12 @@ export class DonorService {
     const bloodDonation = await this.bloodDonationHistoryRepo.findOne({
       where: { id: donationId, user: { id: userId } },
     });
-    
-    if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
 
-    bloodDonation.centerName = donationData.centerName ?? bloodDonation.centerName;
+    if (!bloodDonation)
+      throw new NotFoundException('Blood donation record not found');
+
+    bloodDonation.centerName =
+      donationData.centerName ?? bloodDonation.centerName;
     bloodDonation.units = donationData.units ?? bloodDonation.units;
 
     return await this.bloodDonationHistoryRepo.save(bloodDonation);
@@ -168,10 +168,11 @@ export class DonorService {
     const bloodDonation = await this.bloodDonationHistoryRepo.findOne({
       where: { id: donationId, user: { id: userId } },
     });
-    
-    if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
 
-    Object.keys(donationData).forEach(key => {
+    if (!bloodDonation)
+      throw new NotFoundException('Blood donation record not found');
+
+    Object.keys(donationData).forEach((key) => {
       if (donationData[key] !== undefined && key !== 'donatedAt') {
         bloodDonation[key] = donationData[key];
       }
@@ -184,10 +185,14 @@ export class DonorService {
     const bloodDonation = await this.bloodDonationHistoryRepo.findOne({
       where: { id: donationId, user: { id: userId } },
     });
-    
-    if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
+
+    if (!bloodDonation)
+      throw new NotFoundException('Blood donation record not found');
 
     await this.bloodDonationHistoryRepo.remove(bloodDonation);
-    return { success: true, message: 'Blood donation record deleted successfully' };
+    return {
+      success: true,
+      message: 'Blood donation record deleted successfully',
+    };
   }
 }

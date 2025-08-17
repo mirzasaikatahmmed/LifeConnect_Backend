@@ -86,14 +86,22 @@ export class DonorController {
   // 11) PUT /api/donors/history/:id
   @UseGuards(JwtGuard)
   @Put('history/:id')
-  updateHistory(@Req() req: any, @Param('id') id: number, @Body() historyData: any) {
+  updateHistory(
+    @Req() req: any,
+    @Param('id') id: number,
+    @Body() historyData: any,
+  ) {
     return this.donorService.updateHistory(req.user.sub, id, historyData);
   }
 
   // 12) PATCH /api/donors/history/:id
   @UseGuards(JwtGuard)
   @Patch('history/:id')
-  patchHistory(@Req() req: any, @Param('id') id: number, @Body() historyData: any) {
+  patchHistory(
+    @Req() req: any,
+    @Param('id') id: number,
+    @Body() historyData: any,
+  ) {
     return this.donorService.patchHistory(req.user.sub, id, historyData);
   }
 

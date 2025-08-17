@@ -103,10 +103,14 @@ export class ManagerService {
   }
 
   async createManagerUser(data: CreateUserDto): Promise<User> {
-    const role = await this.roleRepository.findOneBy({ id: data.roleId });
+    const role = await this.roleRepository.findOne({
+      where: { id: data.roleId, isActive: true },
+    });
     console.log('Role found:', role);
     if (!role) {
-      throw new NotFoundException(`Role with ID ${data.roleId} not found`);
+      throw new NotFoundException(
+        `Role with ID ${data.roleId} not found or inactive`,
+      );
     }
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = this.userRepository.create({
@@ -114,7 +118,17 @@ export class ManagerService {
       password: hashedPassword,
       // userType: 'manager',
     });
-    return await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Return user with role information populated
+    const userWithRole = await this.userRepository.findOne({
+      where: { id: savedUser.id },
+      relations: ['role'],
+    });
+    if (!userWithRole) {
+      throw new NotFoundException('Failed to retrieve created user');
+    }
+    return userWithRole;
   }
 
   async createRole(data: CreateRoleDto): Promise<Role> {

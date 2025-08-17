@@ -1,812 +1,736 @@
 # LifeConnect Admin API Documentation
 
+## Overview
+This document provides comprehensive documentation for all Admin APIs in the LifeConnect blood donation management system. The admin APIs are divided into two controllers:
+1. **AdminController** (`/api/*`) - Main admin functionality 
+2. **AlertController** (`/admin/alerts/*`) - Advanced alert management
+
 ## Base URL
-All API endpoints are prefixed with `/api`
+```
+http://localhost:3007
+```
 
 ## Authentication
-Most endpoints require admin authentication via `AdminGuard`. The login endpoint is used to obtain authentication credentials.
+All admin endpoints (except login and bootstrap-admin) require authentication using JWT Bearer tokens.
+
+### Headers Required:
+```
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+```
 
 ---
 
-## Authentication Endpoints
+## 1. Authentication Endpoints
 
-### Admin Login
-**POST** `/api/login`
+### 1.1 Admin Login
+**Endpoint:** `POST /api/login`  
+**Description:** Authenticate admin user and get JWT token  
+**Authentication:** Not required  
 
-Authenticates an admin user and returns login credentials.
-
-#### Request Body
+**Request Body:**
 ```json
 {
-  "email": "admin@example.com",
-  "password": "password123"
+  "email": "john.admin@lifeconnect.com",
+  "password": "password"
 }
 ```
 
-#### Response
+**Response:**
 ```json
 {
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "admin": {
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "admin": {
+    "id": 17,
+    "email": "john.admin@lifeconnect.com",
+    "name": "John Admin",
+    "phoneNumber": "+1234567891",
+    "bloodType": null,
+    "userType": "admin",
+    "role": {
       "id": 1,
-      "name": "Admin Name",
-      "email": "admin@example.com"
-    },
-    "token": "jwt_token_here"
-  }
-}
-```
-
----
-
-## Admin Management
-
-### Bootstrap Admin
-**POST** `/api/bootstrap-admin`
-
-Creates the first admin account (no authentication required).
-
-#### Request Body
-```json
-{
-  "name": "Admin Name",
-  "email": "admin@example.com",
-  "password": "securePassword123",
-  "phoneNumber": "+1234567890"
-}
-```
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "Bootstrap admin created successfully",
-  "data": {
-    "id": 1,
-    "name": "Admin Name",
-    "email": "admin@example.com",
-    "phoneNumber": "+1234567890"
-  }
-}
-```
-
-### Create Admin
-**POST** `/api/admins`
-🔒 *Requires Admin Authentication*
-
-Creates a new admin account.
-
-#### Request Body
-```json
-{
-  "name": "New Admin",
-  "email": "newadmin@example.com",
-  "password": "securePassword123",
-  "phoneNumber": "+1234567890"
-}
-```
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "Admin created successfully",
-  "data": {
-    "id": 2,
-    "name": "New Admin",
-    "email": "newadmin@example.com",
-    "phoneNumber": "+1234567890"
-  }
-}
-```
-
----
-
-## User Management
-
-### Get All Users
-**GET** `/api/users`
-🔒 *Requires Admin Authentication*
-
-Retrieves a list of all users (Donors and Managers).
-
-#### Response
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "name": "John Doe",
-      "email": "john@example.com",
-      "phoneNumber": "+1234567890",
-      "bloodType": "O+",
-      "userType": "donor",
-      "roleId": 1,
+      "name": "admin",
+      "description": "System administrator with full access",
+      "permissions": ["create", "read", "update", "delete", "manage_users", "manage_roles", "send_alerts", "view_reports"],
       "isActive": true,
-      "isVerified": true,
-      "createdAt": "2024-01-01T00:00:00.000Z"
-    }
-  ]
+      "createdAt": "2025-08-15T17:29:58.214Z",
+      "updatedAt": "2025-08-15T17:29:58.214Z"
+    },
+    "roleId": 1,
+    "isActive": true,
+    "isVerified": true,
+    "createdAt": "2025-08-15T17:29:58.242Z",
+    "updatedAt": "2025-08-15T17:29:58.242Z"
+  }
 }
 ```
 
-### Create User
-**POST** `/api/users`
-🔒 *Requires Admin Authentication*
+### 1.2 Bootstrap Admin
+**Endpoint:** `POST /api/bootstrap-admin`  
+**Description:** Create the first admin account (no authentication required)  
+**Authentication:** Not required  
 
-Creates a new user account.
-
-#### Request Body
+**Request Body:**
 ```json
 {
-  "name": "Jane Smith",
-  "email": "jane@example.com",
-  "password": "password123",
+  "name": "Super Admin",
+  "email": "admin@lifeconnect.com",
+  "password": "securepassword",
   "phoneNumber": "+1234567890",
-  "bloodType": "A+",
-  "userType": "donor",
+  "userType": "admin",
   "roleId": 1
 }
 ```
 
-#### Response
-```json
-{
-  "success": true,
-  "message": "User created successfully",
-  "data": {
-    "id": 2,
-    "name": "Jane Smith",
-    "email": "jane@example.com",
-    "phoneNumber": "+1234567890",
-    "bloodType": "A+",
-    "userType": "donor",
-    "roleId": 1
-  }
-}
-```
-
-### Delete User
-**DELETE** `/api/users/:id`
-🔒 *Requires Admin Authentication*
-
-Deletes a user account by ID.
-
-#### Path Parameters
-- `id` (number): User ID to delete
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "User deleted successfully"
-}
-```
-
 ---
 
-## Role Management
+## 2. User Management Endpoints
 
-### Get All Roles
-**GET** `/api/roles`
-🔒 *Requires Admin Authentication*
+### 2.1 Get All Users
+**Endpoint:** `GET /api/users`  
+**Description:** Retrieve all users (donors, managers, admins)  
+**Authentication:** Required  
 
-Retrieves a list of all available roles.
-
-#### Response
+**Response:**
 ```json
-{
-  "success": true,
-  "data": [
-    {
+[
+  {
+    "id": 17,
+    "email": "john.admin@lifeconnect.com",
+    "password": "$2b$10$...",
+    "name": "John Admin",
+    "phoneNumber": "+1234567891",
+    "bloodType": null,
+    "userType": "admin",
+    "role": {
       "id": 1,
-      "name": "Donor",
-      "description": "Blood donor role",
-      "permissions": ["donate_blood", "view_profile"]
+      "name": "admin",
+      "description": "System administrator with full access",
+      "permissions": ["create", "read", "update", "delete", "manage_users", "manage_roles", "send_alerts", "view_reports"],
+      "isActive": true,
+      "createdAt": "2025-08-15T17:29:58.214Z",
+      "updatedAt": "2025-08-15T17:29:58.214Z"
     },
-    {
-      "id": 2,
-      "name": "Manager",
-      "description": "Blood bank manager role",
-      "permissions": ["manage_requests", "view_donations"]
-    }
-  ]
-}
-```
-
-### Create Role
-**POST** `/api/roles`
-🔒 *Requires Admin Authentication*
-
-Creates a new role in the system.
-
-#### Request Body
-```json
-{
-  "name": "doner",
-  "description": "Blood Donor Role",
-  "permissions": ["donate_blood", "view_profile"]
-}
-```
-
-#### Field Descriptions
-- `name` (string, required): The name of the role. Must be one of: `"admin"`, `"manager"`, `"doner"`
-- `description` (string, optional): Description of the role and its purpose
-- `permissions` (array, optional): Array of permission strings for the role (defaults to empty array)
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "Role created successfully",
-  "data": {
-    "id": 1,
-    "name": "doner",
-    "description": "Blood Donor Role",
-    "permissions": ["donate_blood", "view_profile"],
+    "roleId": 1,
     "isActive": true,
-    "createdAt": "2024-01-01T00:00:00.000Z"
+    "isVerified": true,
+    "createdAt": "2025-08-15T17:29:58.242Z",
+    "updatedAt": "2025-08-15T17:29:58.242Z"
   }
+]
+```
+
+### 2.2 Create User
+**Endpoint:** `POST /api/users`  
+**Description:** Create a new user account  
+**Authentication:** Required  
+
+**Request Body:**
+```json
+{
+  "name": "New User",
+  "email": "newuser@example.com",
+  "password": "password123",
+  "phoneNumber": "+1234567890",
+  "bloodType": "O+",
+  "userType": "donor",
+  "roleId": 3
 }
 ```
 
-### Update User Role
-**PATCH** `/api/users/:id/role`
-🔒 *Requires Admin Authentication*
+### 2.3 Create Admin
+**Endpoint:** `POST /api/admins`  
+**Description:** Create a new admin account  
+**Authentication:** Required  
 
-Updates a user's role.
+**Request Body:**
+```json
+{
+  "name": "New Admin",
+  "email": "newadmin@example.com",
+  "password": "adminpass123",
+  "phoneNumber": "+1234567890",
+  "userType": "admin",
+  "roleId": 1
+}
+```
 
-#### Path Parameters
-- `id` (number): User ID to update
+### 2.4 Delete User
+**Endpoint:** `DELETE /api/users/:id`  
+**Description:** Delete a user account by ID  
+**Authentication:** Required  
 
-#### Request Body
+**Parameters:**
+- `id` (path): User ID to delete
+
+### 2.5 Update User Role
+**Endpoint:** `PATCH /api/users/:id/role`  
+**Description:** Update a user's role  
+**Authentication:** Required  
+
+**Parameters:**
+- `id` (path): User ID
+
+**Request Body:**
 ```json
 {
   "roleId": 2
 }
 ```
 
-#### Response
+---
+
+## 3. Role Management Endpoints
+
+### 3.1 Get All Roles
+**Endpoint:** `GET /api/roles`  
+**Description:** Retrieve all available roles  
+**Authentication:** Required  
+
+**Response:**
 ```json
-{
-  "success": true,
-  "message": "User role updated successfully",
-  "data": {
+[
+  {
     "id": 1,
-    "name": "John Doe",
-    "email": "john@example.com",
-    "roleId": 2
+    "name": "admin",
+    "description": "System administrator with full access",
+    "permissions": ["create", "read", "update", "delete", "manage_users", "manage_roles", "send_alerts", "view_reports"],
+    "isActive": true,
+    "createdAt": "2025-08-15T17:29:58.214Z",
+    "updatedAt": "2025-08-15T17:29:58.214Z"
+  },
+  {
+    "id": 2,
+    "name": "manager",
+    "description": "Blood bank manager with limited admin access",
+    "permissions": ["create", "read", "update", "manage_requests", "view_donors"],
+    "isActive": true,
+    "createdAt": "2025-08-15T17:29:58.233Z",
+    "updatedAt": "2025-08-15T17:29:58.233Z"
+  },
+  {
+    "id": 3,
+    "name": "donor",
+    "description": "Blood donor with basic access",
+    "permissions": ["read", "update_profile", "book_appointment"],
+    "isActive": true,
+    "createdAt": "2025-08-15T17:29:58.235Z",
+    "updatedAt": "2025-08-15T17:29:58.235Z"
   }
+]
+```
+
+### 3.2 Create Role
+**Endpoint:** `POST /api/roles`  
+**Description:** Create a new role  
+**Authentication:** Required  
+
+**Request Body:**
+```json
+{
+  "name": "admin",
+  "description": "Custom role description",
+  "permissions": ["read", "write"]
 }
 ```
 
 ---
 
-## Reports
+## 4. Alert Management Endpoints (AdminController)
 
-### Donation Reports
-**GET** `/api/reports/donations`
-🔒 *Requires Admin Authentication*
+### 4.1 Create Alert
+**Endpoint:** `POST /api/alerts`  
+**Description:** Create a new system alert  
+**Authentication:** Required  
 
-Generates a report on donation statistics.
-
-#### Response
+**Request Body:**
 ```json
 {
-  "success": true,
-  "data": {
-    "totalDonations": 150,
-    "monthlyDonations": 25,
-    "donationsByBloodType": {
-      "O+": 45,
-      "A+": 30,
-      "B+": 25,
-      "AB+": 15,
-      "O-": 20,
-      "A-": 10,
-      "B-": 3,
-      "AB-": 2
-    },
-    "topDonors": [
-      {
-        "id": 1,
-        "name": "John Doe",
-        "donationCount": 5
-      }
-    ]
-  }
-}
-```
-
-### Request Reports
-**GET** `/api/reports/requests`
-🔒 *Requires Admin Authentication*
-
-Generates a report on blood request statistics.
-
-#### Response
-```json
-{
-  "success": true,
-  "data": {
-    "totalRequests": 75,
-    "pendingRequests": 12,
-    "fulfilledRequests": 58,
-    "cancelledRequests": 5,
-    "requestsByBloodType": {
-      "O+": 20,
-      "A+": 15,
-      "B+": 12,
-      "AB+": 8,
-      "O-": 10,
-      "A-": 6,
-      "B-": 3,
-      "AB-": 1
-    }
-  }
-}
-```
-
----
-
-## Alert Management
-
-### Create Alert
-**POST** `/api/alerts`
-🔒 *Requires Admin Authentication*
-
-Creates a new system-wide alert or notification.
-
-#### Request Body
-```json
-{
-  "title": "Blood Drive Event",
-  "message": "Join us for a blood drive event this weekend at the community center.",
+  "title": "Test Alert API",
+  "message": "This is a test alert created via API documentation",
   "type": "info",
-  "targetAudience": "all",
-  "expiresAt": "2024-12-31T23:59:59.000Z",
   "priority": 1,
+  "targetAudience": "all",
+  "expiresAt": "2025-12-31T00:00:00.000Z",
   "isSystemWide": true
 }
 ```
 
-#### Field Descriptions
-- `type`: One of `"info"`, `"warning"`, `"error"`, `"success"` (default: `"info"`)
-- `targetAudience`: One of `"all"`, `"donors"`, `"managers"`, `"admins"` (default: `"all"`)
-- `priority`: Number 0-3, where 0 is lowest priority and 3 is highest (default: 0)
-- `expiresAt`: ISO date string (optional)
-- `isSystemWide`: Boolean (default: true)
-
-#### Response
+**Response:**
 ```json
 {
-  "success": true,
-  "message": "Alert created successfully",
-  "data": {
-    "id": 1,
-    "title": "Blood Drive Event",
-    "message": "Join us for a blood drive event this weekend at the community center.",
-    "type": "info",
-    "targetAudience": "all",
-    "priority": 1,
+  "id": 11,
+  "title": "Test Alert API",
+  "message": "This is a test alert created via API documentation",
+  "type": "info",
+  "status": "active",
+  "targetAudience": null,
+  "expiresAt": null,
+  "priority": 1,
+  "isSystemWide": true,
+  "userId": null,
+  "createdAt": "2025-08-17T18:10:18.148Z",
+  "updatedAt": "2025-08-17T18:10:18.148Z"
+}
+```
+
+### 4.2 Get Active Alerts
+**Endpoint:** `GET /api/alerts/active`  
+**Description:** Retrieve all active alerts  
+**Authentication:** Required  
+
+**Response:**
+```json
+[
+  {
+    "id": 5,
+    "title": "Urgent Blood Shortage",
+    "message": "We are experiencing a critical shortage of O- blood type. Please donate if you are eligible.",
+    "type": "error",
+    "status": "active",
+    "targetAudience": "donors",
+    "expiresAt": "2025-12-31T00:00:00.000Z",
+    "priority": 3,
     "isSystemWide": true,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "expiresAt": "2024-12-31T23:59:59.000Z"
+    "userId": null,
+    "createdAt": "2025-08-15T17:29:58.269Z",
+    "updatedAt": "2025-08-15T17:29:58.269Z"
   }
-}
+]
 ```
 
-### Get Active Alerts
-**GET** `/api/alerts/active`
-🔒 *Requires Admin Authentication*
+### 4.3 Delete Alert
+**Endpoint:** `DELETE /api/alerts/:id`  
+**Description:** Delete an alert by ID  
+**Authentication:** Required  
 
-Retrieves all active alerts.
+**Parameters:**
+- `id` (path): Alert ID to delete
 
-#### Response
+### 4.4 Create Alert and Send Email
+**Endpoint:** `POST /api/alerts/send-email`  
+**Description:** Create alert and send email notification to all users  
+**Authentication:** Required  
+
+**Request Body:**
 ```json
 {
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "title": "Blood Drive Event",
-      "message": "Join us for a blood drive event this weekend.",
-      "type": "info",
-      "targetAudience": "all",
-      "priority": 1,
-      "isSystemWide": true,
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "expiresAt": "2024-12-31T23:59:59.000Z"
-    }
-  ]
-}
-```
-
-### Delete Alert
-**DELETE** `/api/alerts/:id`
-🔒 *Requires Admin Authentication*
-
-Deletes a system-wide alert.
-
-#### Path Parameters
-- `id` (number): Alert ID to delete
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "Alert deleted successfully"
-}
-```
-
----
-
-## Email Alert System
-
-### Create Alert and Send Email
-**POST** `/api/alerts/send-email`
-🔒 *Requires Admin Authentication*
-
-Creates an alert and immediately sends it via email to all users.
-
-#### Request Body
-```json
-{
-  "title": "Urgent: Blood Shortage Alert",
-  "message": "We are experiencing a critical shortage of O- blood type. Please donate if you can.",
+  "title": "Email Alert",
+  "message": "This alert will be sent via email",
   "type": "warning",
-  "targetAudience": "donors",
-  "priority": 3,
+  "targetAudience": "all",
+  "priority": 2,
   "sendEmail": true
 }
 ```
 
-#### Response
+### 4.5 Send Existing Alert via Email
+**Endpoint:** `POST /api/alerts/:id/send-email`  
+**Description:** Send existing alert via email to all users  
+**Authentication:** Required  
+
+**Parameters:**
+- `id` (path): Alert ID to send
+
+---
+
+## 5. Alert Management Endpoints (AlertController)
+
+### 5.1 Get All Alerts (AlertController)
+**Endpoint:** `GET /admin/alerts`  
+**Description:** Retrieve all alerts with advanced filtering  
+**Authentication:** Required  
+
+**Query Parameters:**
+- `status` (optional): Filter by status (e.g., "active")
+
+**Response:**
+```json
+[
+  {
+    "id": 11,
+    "title": "Test Alert API",
+    "message": "This is a test alert created via API documentation",
+    "type": "info",
+    "status": "active",
+    "expiresAt": null,
+    "isSystemWide": true,
+    "targetAudience": null,
+    "priority": 1,
+    "userId": null,
+    "createdAt": "2025-08-17T18:10:18.148Z",
+    "updatedAt": "2025-08-17T18:10:18.148Z"
+  }
+]
+```
+
+### 5.2 Create Alert (AlertController)
+**Endpoint:** `POST /admin/alerts`  
+**Description:** Create a new alert with creator tracking  
+**Authentication:** Required  
+
+**Request Body:**
 ```json
 {
-  "success": true,
-  "message": "Alert created and email process initiated",
-  "data": {
-    "alert": {
-      "id": 2,
-      "title": "Urgent: Blood Shortage Alert",
-      "message": "We are experiencing a critical shortage of O- blood type.",
-      "type": "warning",
-      "targetAudience": "donors",
-      "priority": 3
-    },
-    "emailResult": {
-      "success": true,
-      "sentCount": 45,
-      "failedCount": 2,
-      "message": "Emails sent successfully to 45 users, 2 failed"
-    }
-  }
+  "title": "New Alert",
+  "message": "Alert message",
+  "type": "info",
+  "status": "active",
+  "expiresAt": "2025-12-31T00:00:00.000Z",
+  "isSystemWide": true,
+  "targetAudience": "all",
+  "priority": 1
 }
 ```
 
-### Send Existing Alert
-**POST** `/api/alerts/:id/send-email`
-🔒 *Requires Admin Authentication*
+### 5.3 Get Alert by ID
+**Endpoint:** `GET /admin/alerts/:id`  
+**Description:** Retrieve a specific alert by ID  
+**Authentication:** Required  
 
-Sends an existing alert via email to all users.
+**Parameters:**
+- `id` (path): Alert ID
 
-#### Path Parameters
-- `id` (number): Alert ID to send
+### 5.4 Update Alert
+**Endpoint:** `PUT /admin/alerts/:id`  
+**Description:** Update an existing alert  
+**Authentication:** Required  
 
-#### Response
+**Parameters:**
+- `id` (path): Alert ID
+
+**Request Body:**
 ```json
 {
-  "success": true,
-  "message": "Alert email sent successfully",
-  "data": {
-    "sentCount": 50,
-    "failedCount": 1
-  }
+  "title": "Updated Alert Title",
+  "message": "Updated message",
+  "type": "warning",
+  "status": "active"
+}
+```
+
+### 5.5 Delete Alert (AlertController)
+**Endpoint:** `DELETE /admin/alerts/:id`  
+**Description:** Delete an alert (with creator verification)  
+**Authentication:** Required  
+
+**Parameters:**
+- `id` (path): Alert ID
+
+### 5.6 Get Alerts by Audience
+**Endpoint:** `GET /admin/alerts/by-audience/:audience`  
+**Description:** Get alerts filtered by target audience  
+**Authentication:** Required  
+
+**Parameters:**
+- `audience` (path): Target audience (e.g., "donors", "managers", "admins", "all")
+
+### 5.7 Get My Alerts
+**Endpoint:** `GET /admin/alerts/my-alerts`  
+**Description:** Get alerts created by the current admin user  
+**Authentication:** Required  
+
+**Response:**
+```json
+[]
+```
+
+### 5.8 Archive Expired Alerts
+**Endpoint:** `POST /admin/alerts/archive-expired`  
+**Description:** Archive all expired alerts  
+**Authentication:** Required  
+
+**Response:**
+```json
+{
+  "message": "Expired alerts archived successfully",
+  "archivedCount": 5
 }
 ```
 
 ---
 
-## Email System Testing
+## 6. Reports Endpoints
 
-### Test Email Connection
-**GET** `/api/mailer/test-connection`
-🔒 *Requires Admin Authentication*
+### 6.1 Donation Reports
+**Endpoint:** `GET /api/reports/donations`  
+**Description:** Generate donation statistics report  
+**Authentication:** Required  
 
-Tests the SMTP connection configuration.
+**Response:**
+```json
+{
+  "totalDonors": 7,
+  "activeDonors": 7,
+  "inactiveDonors": 0,
+  "bloodTypeDistribution": {},
+  "monthlyDonations": [],
+  "generatedAt": "2025-08-17T18:10:04.836Z"
+}
+```
 
-#### Response
+### 6.2 Request Reports
+**Endpoint:** `GET /api/reports/requests`  
+**Description:** Generate blood request statistics report  
+**Authentication:** Required  
+
+**Response:**
+```json
+{
+  "totalManagers": 2,
+  "pendingRequests": 0,
+  "fulfilledRequests": 0,
+  "monthlyRequests": [],
+  "generatedAt": "2025-08-17T18:10:05.639Z"
+}
+```
+
+---
+
+## 7. Blood Request Management Endpoints
+
+### 7.1 Get All Blood Requests
+**Endpoint:** `GET /api/blood-requests`  
+**Description:** Retrieve all blood requests  
+**Authentication:** Required  
+
+**Response:**
+```json
+[
+  {
+    "id": 5,
+    "bloodType": "AB+",
+    "urgencyLevel": "high",
+    "hospitalName": "Final Test Hospital",
+    "hospitalAddress": "999 Final Test Ave",
+    "status": "active",
+    "neededBy": "2025-08-25T12:00:00.000Z",
+    "unitsNeeded": 3,
+    "postedBy": {
+      "id": 18,
+      "email": "sarah.manager@lifeconnect.com",
+      "name": "Sarah Manager",
+      "phoneNumber": "+1234567892",
+      "bloodType": null,
+      "userType": "manager",
+      "role": {
+        "id": 2,
+        "name": "manager",
+        "description": "Blood bank manager with limited admin access",
+        "permissions": ["create", "read", "update", "manage_requests", "view_donors"],
+        "isActive": true,
+        "createdAt": "2025-08-15T17:29:58.233Z",
+        "updatedAt": "2025-08-15T17:29:58.233Z"
+      },
+      "roleId": 2,
+      "isActive": true,
+      "isVerified": true,
+      "createdAt": "2025-08-15T17:29:58.244Z",
+      "updatedAt": "2025-08-15T17:29:58.244Z"
+    },
+    "userId": 18,
+    "createdAt": "2025-08-16T22:03:52.432Z",
+    "updatedAt": "2025-08-16T22:03:52.432Z"
+  }
+]
+```
+
+### 7.2 Get Blood Request by ID
+**Endpoint:** `GET /api/blood-requests/:id`  
+**Description:** Retrieve a specific blood request by ID  
+**Authentication:** Required  
+
+**Parameters:**
+- `id` (path): Blood request ID
+
+### 7.3 Create Blood Request
+**Endpoint:** `POST /api/blood-requests`  
+**Description:** Create a new blood request  
+**Authentication:** Required  
+
+**Request Body:**
+```json
+{
+  "bloodType": "O+",
+  "urgencyLevel": "high",
+  "hospitalName": "Emergency Hospital",
+  "hospitalAddress": "123 Emergency St",
+  "neededBy": "2025-08-25T12:00:00.000Z",
+  "unitsNeeded": 2
+}
+```
+
+### 7.4 Update Blood Request
+**Endpoint:** `PATCH /api/blood-requests/:id`  
+**Description:** Update an existing blood request  
+**Authentication:** Required  
+
+**Parameters:**
+- `id` (path): Blood request ID
+
+**Request Body:**
+```json
+{
+  "urgencyLevel": "critical",
+  "unitsNeeded": 5,
+  "status": "active"
+}
+```
+
+### 7.5 Delete Blood Request
+**Endpoint:** `DELETE /api/blood-requests/:id`  
+**Description:** Delete a blood request  
+**Authentication:** Required  
+
+**Parameters:**
+- `id` (path): Blood request ID
+
+---
+
+## 8. Email/Mailer Endpoints
+
+### 8.1 Test Email Connection
+**Endpoint:** `GET /api/mailer/test-connection`  
+**Description:** Test SMTP connection  
+**Authentication:** Required  
+
+**Response:**
 ```json
 {
   "success": true,
   "message": "SMTP connection successful",
-  "timestamp": "2024-01-01T12:00:00.000Z"
+  "timestamp": "2025-08-17T18:10:07.759Z"
 }
 ```
 
-### Create Test User and Send Email
-**POST** `/api/mailer/test-send`
-🔒 *Requires Admin Authentication*
+### 8.2 Create Test User and Send Email
+**Endpoint:** `POST /api/mailer/test-send`  
+**Description:** Create a test user and send test email  
+**Authentication:** Required  
 
-Creates a test user and sends a test email.
-
-#### Request Body
+**Request Body:**
 ```json
 {
   "email": "test@example.com"
 }
 ```
 
-#### Response
+---
+
+## 9. Data Types and Enums
+
+### Alert Types
+- `info` - Informational alert
+- `warning` - Warning alert
+- `error` - Error alert
+- `success` - Success alert
+
+### Alert Status
+- `active` - Alert is active
+- `inactive` - Alert is inactive
+- `archived` - Alert is archived
+- `expired` - Alert has expired
+
+### Alert Priority
+- `0` - Low priority
+- `1` - Normal priority
+- `2` - High priority
+- `3` - Critical priority
+
+### Target Audience
+- `all` - All users
+- `donors` - Only donors
+- `managers` - Only managers
+- `admins` - Only admins
+
+### User Types
+- `admin` - System administrator
+- `manager` - Blood bank manager
+- `donor` - Blood donor
+
+### Blood Types
+- `A+`, `A-`, `B+`, `B-`, `AB+`, `AB-`, `O+`, `O-`
+
+### Urgency Levels
+- `low` - Low urgency
+- `medium` - Medium urgency
+- `high` - High urgency
+- `critical` - Critical urgency
+- `urgent` - Urgent
+
+### Blood Request Status
+- `active` - Request is active
+- `fulfilled` - Request has been fulfilled
+- `cancelled` - Request was cancelled
+- `expired` - Request has expired
+
+---
+
+## 10. Error Responses
+
+### 401 Unauthorized
 ```json
 {
-  "success": true,
-  "message": "Test user created and email sent",
-  "data": {
-    "user": {
-      "id": 99,
-      "email": "test@example.com",
-      "name": "Test User",
-      "userType": "donor"
-    },
-    "emailResult": {
-      "success": true,
-      "message": "Test email sent successfully"
-    }
-  },
-  "timestamp": "2024-01-01T12:00:00.000Z"
+  "message": "Unauthorized access. Admin privileges required.",
+  "error": "Unauthorized",
+  "statusCode": 401
+}
+```
+
+### 404 Not Found
+```json
+{
+  "message": "User not found",
+  "error": "Not Found",
+  "statusCode": 404
+}
+```
+
+### 409 Conflict
+```json
+{
+  "message": "User with this email already exists",
+  "error": "Conflict",
+  "statusCode": 409
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "message": "Failed to create role",
+  "statusCode": 500
 }
 ```
 
 ---
 
-## Blood Request Management
+## Notes
 
-### Get All Blood Requests
-**GET** `/api/blood-requests`
-🔒 *Requires Admin Authentication*
+1. **Authentication**: All endpoints require a valid JWT token in the Authorization header except for login and bootstrap-admin endpoints.
 
-Retrieves a list of all blood requests in the system.
+2. **Base URL**: The server runs on port 3007 by default (configurable via `PORT` environment variable).
 
-#### Response
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": 1,
-      "bloodType": "O+",
-      "urgencyLevel": "high",
-      "hospitalName": "City General Hospital",
-      "hospitalAddress": "123 Main St, City, State",
-      "status": "active",
-      "neededBy": "2024-12-31T23:59:59.000Z",
-      "unitsNeeded": 5,
-      "userId": 1,
-      "postedBy": {
-        "id": 1,
-        "name": "Manager Name",
-        "email": "manager@hospital.com"
-      },
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    }
-  ]
-}
-```
+3. **Database**: The system uses PostgreSQL database with TypeORM.
 
-### Get Blood Request by ID
-**GET** `/api/blood-requests/:id`
-🔒 *Requires Admin Authentication*
+4. **Email Service**: SMTP email functionality is available for alert notifications.
 
-Retrieves a specific blood request by its ID.
+5. **Two Alert Controllers**: The system has two separate alert controllers:
+   - `/api/alerts/*` (AdminController) - Basic alert management
+   - `/admin/alerts/*` (AlertController) - Advanced alert management with user tracking
 
-#### Path Parameters
-- `id` (number): Blood request ID to retrieve
+6. **Role-Based Access**: All admin endpoints verify that the user has admin privileges through the AdminGuard.
 
-#### Response
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "bloodType": "O+",
-    "urgencyLevel": "high",
-    "hospitalName": "City General Hospital",
-    "hospitalAddress": "123 Main St, City, State",
-    "status": "active",
-    "neededBy": "2024-12-31T23:59:59.000Z",
-    "unitsNeeded": 5,
-    "userId": 1,
-    "postedBy": {
-      "id": 1,
-      "name": "Manager Name",
-      "email": "manager@hospital.com"
-    },
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-}
-```
+7. **Password Security**: Passwords are hashed using bcrypt before storage.
 
-### Create Blood Request
-**POST** `/api/blood-requests`
-🔒 *Requires Admin Authentication*
-
-Creates a new blood request in the system.
-
-#### Request Body
-```json
-{
-  "bloodType": "A+",
-  "urgencyLevel": "critical",
-  "hospitalName": "Emergency Medical Center",
-  "hospitalAddress": "456 Emergency Ave, City, State",
-  "neededBy": "2024-12-25T18:00:00.000Z",
-  "unitsNeeded": 3
-}
-```
-
-#### Field Descriptions
-- `bloodType` (string, required): Blood type needed (e.g., "A+", "B+", "O+", "AB+", "A-", "B-", "O-", "AB-")
-- `urgencyLevel` (string, required): Urgency level - one of: "low", "medium", "high", "critical"
-- `hospitalName` (string, required): Name of the hospital requesting blood
-- `hospitalAddress` (string, required): Address of the hospital
-- `neededBy` (Date, required): Deadline when blood is needed
-- `unitsNeeded` (number, optional): Number of units needed (defaults to 1)
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "Blood request created successfully",
-  "data": {
-    "id": 2,
-    "bloodType": "A+",
-    "urgencyLevel": "critical",
-    "hospitalName": "Emergency Medical Center",
-    "hospitalAddress": "456 Emergency Ave, City, State",
-    "status": "active",
-    "neededBy": "2024-12-25T18:00:00.000Z",
-    "unitsNeeded": 3,
-    "userId": 1,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-}
-```
-
-### Update Blood Request
-**PATCH** `/api/blood-requests/:id`
-🔒 *Requires Admin Authentication*
-
-Updates an existing blood request.
-
-#### Path Parameters
-- `id` (number): Blood request ID to update
-
-#### Request Body
-```json
-{
-  "bloodType": "O-",
-  "urgencyLevel": "high",
-  "hospitalName": "Updated Hospital Name",
-  "hospitalAddress": "Updated Address",
-  "neededBy": "2024-12-30T12:00:00.000Z",
-  "unitsNeeded": 7,
-  "status": "fulfilled"
-}
-```
-
-#### Field Descriptions
-All fields are optional for updates:
-- `bloodType` (string): Blood type needed
-- `urgencyLevel` (string): Urgency level - "low", "medium", "high", "critical"
-- `hospitalName` (string): Hospital name
-- `hospitalAddress` (string): Hospital address
-- `neededBy` (Date): Deadline date
-- `unitsNeeded` (number): Number of units needed
-- `status` (string): Request status - "active", "fulfilled", "cancelled", "expired"
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "Blood request updated successfully",
-  "data": {
-    "id": 1,
-    "bloodType": "O-",
-    "urgencyLevel": "high",
-    "hospitalName": "Updated Hospital Name",
-    "hospitalAddress": "Updated Address",
-    "status": "fulfilled",
-    "neededBy": "2024-12-30T12:00:00.000Z",
-    "unitsNeeded": 7,
-    "userId": 1,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T12:00:00.000Z"
-  }
-}
-```
-
-### Delete Blood Request
-**DELETE** `/api/blood-requests/:id`
-🔒 *Requires Admin Authentication*
-
-Deletes a blood request from the system.
-
-#### Path Parameters
-- `id` (number): Blood request ID to delete
-
-#### Response
-```json
-{
-  "success": true,
-  "message": "Blood request deleted successfully"
-}
-```
+8. **JWT Configuration**: JWT tokens are signed with the secret key defined in the `JWT_SECRET` environment variable.
 
 ---
 
-## Error Responses
+## Testing Credentials
 
-All endpoints may return the following error response format:
+**Admin Login:**
+- Email: `john.admin@lifeconnect.com`
+- Password: `password`
 
-```json
-{
-  "success": false,
-  "statusCode": 400,
-  "message": "Error description",
-  "error": "Bad Request"
-}
-```
-
-### Common HTTP Status Codes
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request (validation errors)
-- `401` - Unauthorized (authentication required)
-- `403` - Forbidden (insufficient permissions)
-- `404` - Not Found (resource doesn't exist)
-- `409` - Conflict (resource already exists)
-- `500` - Internal Server Error
-
-### Common Error Messages
-- "User with this email already exists" (409)
-- "Admin with this email already exists" (409)
-- "User not found" (404)
-- "Alert not found" (404)
-- "Login failed" (401)
-- "Failed to retrieve users" (500)
-- "Failed to create user" (500)
-- "Failed to delete user" (500)
-- "Failed to update user role" (500)
-- "Failed to retrieve roles" (500)
-- "Failed to create role" (500)
-
----
-
-## Request Headers
-
-For authenticated endpoints, include the authorization header:
-```
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-```
-
-## Rate Limiting
-API requests may be subject to rate limiting. Check response headers for rate limit information.
-
-## Validation Rules
-- **Email**: Must be a valid email format
-- **Password**: Required for user/admin creation
-- **Phone Number**: Required for user creation, optional for admin creation
-- **Role ID**: Must be a valid existing role ID
-- **Alert Type**: Must be one of: `info`, `warning`, `error`, `success`
-- **Target Audience**: Must be one of: `all`, `donors`, `managers`, `admins`
-- **Priority**: Must be a number between 0-3
-- **User Type**: Must be one of: `donor`, `manager`, `admin`
+This documentation was generated on August 17, 2025, by testing the actual API endpoints.
