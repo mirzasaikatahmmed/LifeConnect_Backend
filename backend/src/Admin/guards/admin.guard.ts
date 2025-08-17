@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
@@ -11,7 +16,9 @@ export class AdminGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('Unauthorized access. Admin privileges required.');
+      throw new UnauthorizedException(
+        'Unauthorized access. Admin privileges required.',
+      );
     }
 
     try {
@@ -20,12 +27,16 @@ export class AdminGuard implements CanActivate {
 
       // Check if user has admin role
       if (payload.role !== 'admin' && payload.userType !== 'admin') {
-        throw new UnauthorizedException('Unauthorized access. Admin privileges required.');
+        throw new UnauthorizedException(
+          'Unauthorized access. Admin privileges required.',
+        );
       }
 
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Unauthorized access. Admin privileges required.');
+      throw new UnauthorizedException(
+        'Unauthorized access. Admin privileges required.',
+      );
     }
   }
 

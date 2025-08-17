@@ -16,12 +16,20 @@ import {
 import { ManagerService } from './Manager.Service';
 import { CreateManagerDto } from './dto files/manager.dto';
 import { ManagerEntity } from './Entities/Manager.entity';
-import { CreateRoleDto, CreateUserDto, LoginDto, UpdateUserDto } from 'src/Admin/admin.dto';
+import {
+  CreateRoleDto,
+  CreateUserDto,
+  LoginDto,
+  UpdateUserDto,
+} from 'src/Admin/admin.dto';
 import { User } from 'src/Admin/entities/user.entity';
 import { Role } from 'src/Admin/entities/role.entity';
 import { ManagerGuard } from './guards/manager.guard';
 import { JwtGuard } from 'src/Admin/guards/jwt.guard';
-import { CreateBloodRequestDto, UpdateBloodRequestDto } from './dto files/bloodrequest.dto';
+import {
+  CreateBloodRequestDto,
+  UpdateBloodRequestDto,
+} from './dto files/bloodrequest.dto';
 import { BloodRequest } from './Entities/bloodrequest.entity';
 
 @Controller('manager')
@@ -42,7 +50,9 @@ export class ManagerController {
 
   @Get(':id')
   @UseGuards(ManagerGuard)
-  getManagerById(@Param('id', ParseIntPipe) id: number): Promise<ManagerEntity> {
+  getManagerById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<ManagerEntity> {
     return this.managerService.getManagerById(id);
   }
 
@@ -50,12 +60,12 @@ export class ManagerController {
   @UseGuards(ManagerGuard)
   async updateManager(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateData: Partial<ManagerEntity>
+    @Body() updateData: Partial<ManagerEntity>,
   ): Promise<ManagerEntity> {
     // return this.managerService.updateManager(id, updateData);
-    const update = await this.managerService.updateManager(id, updateData)
-    await this.managerService.sendUpdateEmail(update.email, update.name)
-    return update
+    const update = await this.managerService.updateManager(id, updateData);
+    await this.managerService.sendUpdateEmail(update.email, update.name);
+    return update;
   }
 
   @Get('allmanagers')
@@ -85,7 +95,10 @@ export class ManagerController {
   @Post('manageruserlogin')
   @UsePipes(new ValidationPipe())
   async manageruserlogin(@Body() loginDto: LoginDto) {
-    return this.managerService.manageruserlogin(loginDto.email, loginDto.password);
+    return this.managerService.manageruserlogin(
+      loginDto.email,
+      loginDto.password,
+    );
   }
 
   @Delete('users/:id')
@@ -99,10 +112,17 @@ export class ManagerController {
   async updatefulluser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: CreateUserDto,
-    @Req() req
+    @Req() req,
   ) {
-    const updateduserinfo = await this.managerService.updateUser(id, updateData, req.user);
-    await this.managerService.sendUpdateEmail(updateduserinfo.email, updateduserinfo.name);
+    const updateduserinfo = await this.managerService.updateUser(
+      id,
+      updateData,
+      req.user,
+    );
+    await this.managerService.sendUpdateEmail(
+      updateduserinfo.email,
+      updateduserinfo.name,
+    );
     return updateduserinfo;
   }
 
@@ -111,7 +131,7 @@ export class ManagerController {
   async updateuserInfo(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: UpdateUserDto,
-    @Req() req
+    @Req() req,
   ) {
     return await this.managerService.updateUserInfo(id, updateData, req.user);
     // await this.managerService.sendUpdateEmail(updateduserinfo.email,updateduserinfo.name)
@@ -122,10 +142,6 @@ export class ManagerController {
     return this.managerService.getAlluserManagers();
   }
 
-
-
-
-
   @Post('sendmail')
   async sendMail(@Body() body: { email: string; username: string }) {
     return this.managerService.sendWelcomeEmail(body.email, body.username);
@@ -133,7 +149,10 @@ export class ManagerController {
 
   @Post('createbloodrequest')
   @UseGuards(ManagerGuard)
-  createrequest(@Body() createdata: CreateBloodRequestDto, @Req() req): Promise<{ message: string }> {
+  createrequest(
+    @Body() createdata: CreateBloodRequestDto,
+    @Req() req,
+  ): Promise<{ message: string }> {
     const userId = req.user.id || req.user.sub;
     return this.managerService.createbloodrequest(userId, createdata);
   }
@@ -143,22 +162,32 @@ export class ManagerController {
   updateBloodRequest(
     @Param('id', ParseIntPipe) requestId: number,
     @Body() updateData: UpdateBloodRequestDto,
-    @Req() req
-  ): Promise<{ message: string, data?: BloodRequest | null }> {
+    @Req() req,
+  ): Promise<{ message: string; data?: BloodRequest | null }> {
     const userId = req.user.id || req.user.sub;
-    return this.managerService.updateBloodRequest(requestId, updateData, userId);
+    return this.managerService.updateBloodRequest(
+      requestId,
+      updateData,
+      userId,
+    );
   }
 
   @Delete('deletebloodrequest/:id')
   @UseGuards(ManagerGuard)
   deleteBloodRequest(
     @Param('id', ParseIntPipe) requestId: number,
-    @Req() req
+    @Req() req,
   ): Promise<{ message: string }> {
     const userId = req.user.id || req.user.sub;
     return this.managerService.deleteBloodRequest(requestId, userId);
   }
   //request from user table below
 
+  @Get('request/allrequests')
+  @UseGuards(ManagerGuard)
+  getallrequestbyid(@Req() req): Promise<BloodRequest[]> {
+    const userId = req.user.id || req.user.sub;
+    return this.managerService.getallrequest(userId)
+  }
 
 }

@@ -4,7 +4,18 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
-import { CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
+import { BloodRequest } from '../Manager/Entities/bloodrequest.entity';
+import {
+  CreateAlertDto,
+  SendAlertEmailDto,
+  CreateUserDto,
+  LoginDto,
+  CreateRoleDto,
+} from './admin.dto';
+import {
+  CreateBloodRequestDto,
+  UpdateBloodRequestDto,
+} from '../Manager/dto files/bloodrequest.dto';
 import { MailerService } from './mailer.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -17,6 +28,8 @@ export class AdminService {
     private roleRepository: Repository<Role>,
     @InjectRepository(Alert)
     private alertRepository: Repository<Alert>,
+    @InjectRepository(BloodRequest)
+    private bloodRequestRepository: Repository<BloodRequest>,
     private mailerService: MailerService,
     private jwtService: JwtService,
   ) {}
@@ -25,7 +38,7 @@ export class AdminService {
   async getAllUsers(): Promise<User[]> {
     return await this.userRepository.find({
       relations: ['role'],
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 
@@ -33,7 +46,7 @@ export class AdminService {
   async findUserById(id: number): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { id },
-      relations: ['role']
+      relations: ['role'],
     });
   }
 
@@ -41,24 +54,27 @@ export class AdminService {
   async findUserByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { email },
-      relations: ['role']
+      relations: ['role'],
     });
   }
 
   // Create a new user
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const bcrypt = require('bcrypt');
-    
+
     // Hash the password
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
-    
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      saltRounds,
+    );
+
     // Create user with hashed password
     const user = this.userRepository.create({
       ...createUserDto,
-      password: hashedPassword
+      password: hashedPassword,
     });
-    
+
     return await this.userRepository.save(user);
   }
 
@@ -66,35 +82,38 @@ export class AdminService {
   async findAdminByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { email, userType: 'admin' },
-      relations: ['role']
+      relations: ['role'],
     });
   }
 
   // Create a new admin (create user with admin role)
   async createAdmin(createUserDto: CreateUserDto): Promise<User> {
     const bcrypt = require('bcrypt');
-    
+
     // Hash the password
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
-    
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      saltRounds,
+    );
+
     // Find admin role
     const adminRole = await this.roleRepository.findOne({
-      where: { name: 'admin' }
+      where: { name: 'admin' },
     });
-    
+
     if (!adminRole) {
       throw new Error('Admin role not found. Please create admin role first.');
     }
-    
+
     // Create user with admin role
     const admin = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
       userType: 'admin',
-      roleId: adminRole.id
+      roleId: adminRole.id,
     });
-    
+
     return await this.userRepository.save(admin);
   }
 
@@ -108,7 +127,7 @@ export class AdminService {
   async getAllRoles(): Promise<Role[]> {
     return await this.roleRepository.find({
       where: { isActive: true },
-      order: { name: 'ASC' }
+      order: { name: 'ASC' },
     });
   }
 
@@ -116,7 +135,7 @@ export class AdminService {
   async createRole(createRoleDto: CreateRoleDto): Promise<Role> {
     const role = this.roleRepository.create({
       ...createRoleDto,
-      isActive: true
+      isActive: true,
     });
     return await this.roleRepository.save(role);
   }
@@ -129,32 +148,36 @@ export class AdminService {
 
   // Generate donation statistics report
   async getDonationReports(): Promise<any> {
-    const totalUsers = await this.userRepository.count({ where: { userType: 'donor' } });
-    const activeUsers = await this.userRepository.count({ 
-      where: { userType: 'donor', isActive: true } 
+    const totalUsers = await this.userRepository.count({
+      where: { userType: 'donor' },
     });
-    
+    const activeUsers = await this.userRepository.count({
+      where: { userType: 'donor', isActive: true },
+    });
+
     return {
       totalDonors: totalUsers,
       activeDonors: activeUsers,
       inactiveDonors: totalUsers - activeUsers,
       bloodTypeDistribution: {},
       monthlyDonations: [],
-      generatedAt: new Date()
+      generatedAt: new Date(),
     };
   }
 
   // Generate blood request statistics report
   async getRequestReports(): Promise<any> {
-    const totalManagers = await this.userRepository.count({ where: { userType: 'manager' } });
-    
+    const totalManagers = await this.userRepository.count({
+      where: { userType: 'manager' },
+    });
+
     return {
       totalManagers: totalManagers,
       // Additional request statistics would be calculated here
       pendingRequests: 0,
       fulfilledRequests: 0,
       monthlyRequests: [],
-      generatedAt: new Date()
+      generatedAt: new Date(),
     };
   }
 
@@ -179,14 +202,19 @@ export class AdminService {
   async getActiveAlerts(): Promise<Alert[]> {
     return await this.alertRepository.find({
       where: { status: 'active' },
-      order: { priority: 'DESC', createdAt: 'DESC' }
+      order: { priority: 'DESC', createdAt: 'DESC' },
     });
   }
 
   // Create alert and send email to all users
   async createAlertAndSendEmail(sendAlertEmailDto: SendAlertEmailDto): Promise<{
     alert: Alert;
-    emailResult: { success: boolean; message: string; sentCount?: number; failedCount?: number };
+    emailResult: {
+      success: boolean;
+      message: string;
+      sentCount?: number;
+      failedCount?: number;
+    };
   }> {
     // Create the alert in database
     const createAlertDto: CreateAlertDto = {
@@ -209,7 +237,7 @@ export class AdminService {
 
     return {
       alert,
-      emailResult
+      emailResult,
     };
   }
 
@@ -221,18 +249,18 @@ export class AdminService {
     failedCount?: number;
   }> {
     const alert = await this.findAlertById(alertId);
-    
+
     if (!alert) {
       return {
         success: false,
-        message: 'Alert not found'
+        message: 'Alert not found',
       };
     }
 
     if (alert.status !== 'active') {
       return {
         success: false,
-        message: 'Only active alerts can be sent via email'
+        message: 'Only active alerts can be sent via email',
       };
     }
 
@@ -244,7 +272,9 @@ export class AdminService {
     const isConnected = await this.mailerService.testConnection();
     return {
       success: isConnected,
-      message: isConnected ? 'SMTP connection successful' : 'SMTP connection failed'
+      message: isConnected
+        ? 'SMTP connection successful'
+        : 'SMTP connection failed',
     };
   }
 
@@ -255,24 +285,29 @@ export class AdminService {
   }> {
     // Create or get existing test user
     const testUser = await this.mailerService.createTestUser(email);
-    
+
     // Send test email
-    const emailResult = await this.mailerService.sendTestEmail(email, testUser.name);
-    
+    const emailResult = await this.mailerService.sendTestEmail(
+      email,
+      testUser.name,
+    );
+
     return {
       user: testUser,
-      emailResult
+      emailResult,
     };
   }
 
   // Admin login method
-  async loginAdmin(loginDto: LoginDto): Promise<{ access_token: string; admin: Omit<User, 'password'> }> {
+  async loginAdmin(
+    loginDto: LoginDto,
+  ): Promise<{ access_token: string; admin: Omit<User, 'password'> }> {
     const bcrypt = require('bcrypt');
-    
+
     // Find admin by email (user with admin role)
     const admin = await this.userRepository.findOne({
       where: { email: loginDto.email, userType: 'admin' },
-      relations: ['role']
+      relations: ['role'],
     });
 
     if (!admin) {
@@ -280,7 +315,10 @@ export class AdminService {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(loginDto.password, admin.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      admin.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -291,7 +329,7 @@ export class AdminService {
       email: admin.email,
       name: admin.name,
       userType: admin.userType,
-      role: admin.role?.name || 'admin'
+      role: admin.role?.name || 'admin',
     };
 
     // Generate JWT token
@@ -299,10 +337,52 @@ export class AdminService {
 
     // Return token and admin info (without password)
     const { password, ...adminWithoutPassword } = admin;
-    
+
     return {
       access_token,
-      admin: adminWithoutPassword
+      admin: adminWithoutPassword,
     };
+  }
+
+  // Get all blood requests
+  async getAllBloodRequests(): Promise<BloodRequest[]> {
+    return await this.bloodRequestRepository.find({
+      relations: ['postedBy'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Get blood request by ID
+  async getBloodRequestById(id: number): Promise<BloodRequest | null> {
+    return await this.bloodRequestRepository.findOne({
+      where: { id },
+      relations: ['postedBy'],
+    });
+  }
+
+  // Create a new blood request
+  async createBloodRequest(
+    createBloodRequestDto: CreateBloodRequestDto,
+  ): Promise<BloodRequest> {
+    const bloodRequest = this.bloodRequestRepository.create({
+      ...createBloodRequestDto,
+      userId: 1,
+    });
+    return await this.bloodRequestRepository.save(bloodRequest);
+  }
+
+  // Update a blood request
+  async updateBloodRequest(
+    id: number,
+    updateBloodRequestDto: UpdateBloodRequestDto,
+  ): Promise<BloodRequest | null> {
+    await this.bloodRequestRepository.update(id, updateBloodRequestDto);
+    return await this.getBloodRequestById(id);
+  }
+
+  // Delete a blood request
+  async deleteBloodRequest(id: number): Promise<{ message: string }> {
+    await this.bloodRequestRepository.delete(id);
+    return { message: 'Blood request deleted successfully' };
   }
 }

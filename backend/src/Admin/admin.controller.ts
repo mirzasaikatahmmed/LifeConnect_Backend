@@ -1,10 +1,11 @@
 /* eslint-disable prettier/prettier */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
+ 
 import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
+import { CreateBloodRequestDto, UpdateBloodRequestDto } from '../Manager/dto files/bloodrequest.dto';
 
 @Controller('api')
 export class AdminController {
@@ -297,6 +298,82 @@ export class AdminController {
       };
     } catch (error) {
       throw new HttpException('Failed to create test user or send email', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/blood-requests - Get all blood requests
+  @UseGuards(AdminGuard)
+  @Get('blood-requests')
+  async getAllBloodRequests() {
+    try {
+      return await this.adminService.getAllBloodRequests();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve blood requests', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/blood-requests/:id - Get blood request by ID
+  @UseGuards(AdminGuard)
+  @Get('blood-requests/:id')
+  async getBloodRequestById(@Param('id') id: number) {
+    try {
+      const bloodRequest = await this.adminService.getBloodRequestById(id);
+      if (!bloodRequest) {
+        throw new HttpException('Blood request not found', HttpStatus.NOT_FOUND);
+      }
+      return bloodRequest;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve blood request', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/blood-requests - Create a new blood request
+  @UseGuards(AdminGuard)
+  @Post('blood-requests')
+  async createBloodRequest(@Body() createBloodRequestDto: CreateBloodRequestDto) {
+    try {
+      return await this.adminService.createBloodRequest(createBloodRequestDto);
+    } catch (error) {
+      throw new HttpException('Failed to create blood request', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PATCH /api/blood-requests/:id - Update blood request
+  @UseGuards(AdminGuard)
+  @Patch('blood-requests/:id')
+  async updateBloodRequest(@Param('id') id: number, @Body() updateBloodRequestDto: UpdateBloodRequestDto) {
+    try {
+      const bloodRequest = await this.adminService.getBloodRequestById(id);
+      if (!bloodRequest) {
+        throw new HttpException('Blood request not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.updateBloodRequest(id, updateBloodRequestDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to update blood request', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // DELETE /api/blood-requests/:id - Delete blood request
+  @UseGuards(AdminGuard)
+  @Delete('blood-requests/:id')
+  async deleteBloodRequest(@Param('id') id: number) {
+    try {
+      const bloodRequest = await this.adminService.getBloodRequestById(id);
+      if (!bloodRequest) {
+        throw new HttpException('Blood request not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.deleteBloodRequest(id);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to delete blood request', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

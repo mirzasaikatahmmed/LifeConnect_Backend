@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
@@ -11,21 +16,27 @@ export class ManagerGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('Unauthorized access. Manager privileges required.');
+      throw new UnauthorizedException(
+        'Unauthorized access. Manager privileges required.',
+      );
     }
 
     try {
       const payload = await this.jwtService.verifyAsync(token);
       request['user'] = payload;
-      
+
       // Check if user has manager role - শুধুমাত্র manager access দিবে
       if (payload.role !== 'manager' && payload.userType !== 'manager') {
-        throw new UnauthorizedException('Unauthorized access. Manager privileges required.');
+        throw new UnauthorizedException(
+          'Unauthorized access. Manager privileges required.',
+        );
       }
-      
+
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Unauthorized access. Manager privileges required.');
+      throw new UnauthorizedException(
+        'Unauthorized access. Manager privileges required.',
+      );
     }
   }
 
