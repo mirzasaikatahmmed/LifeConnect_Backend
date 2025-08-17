@@ -66,14 +66,7 @@ export class ManagerService {
     }
     return manager;
   }
-  // async updateManager(id: number, updateData: Partial<ManagerEntity>): Promise<ManagerEntity> {
-  //   await this.managerRepository.update(id, updateData);
-  //   const updatedManager = await this.managerRepository.findOneBy({ id });
-  //   if (!updatedManager) {
-  //     throw new NotFoundException(`Manager with ID ${id} not found`);
-  //   }
-  //   return updatedManager;
-  // }
+
   async updateManager(id: number, updateData: Partial<ManagerEntity>): Promise<ManagerEntity> {
 
     if (updateData.password) {

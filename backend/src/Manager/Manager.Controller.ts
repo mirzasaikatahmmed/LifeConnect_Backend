@@ -138,7 +138,7 @@ export class ManagerController {
     return this.managerService.createbloodrequest(managerId, createdata);
   }
 
-  @Patch('updatebloodrequest/:id')
+  @Patch(' /:id')
   @UseGuards(ManagerGuard)
   updateBloodRequest(
     @Param('id', ParseIntPipe) requestId: number,
