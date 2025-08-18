@@ -137,7 +137,10 @@ export class AdminService {
   }
 
   // Update a user account
-  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User | null> {
+  async updateUser(
+    id: number,
+    updateUserDto: UpdateUserDto,
+  ): Promise<User | null> {
     await this.userRepository.update(id, updateUserDto);
     return await this.findUserById(id);
   }
