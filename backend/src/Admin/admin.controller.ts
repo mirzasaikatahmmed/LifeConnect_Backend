@@ -22,7 +22,7 @@ export class AdminController {
     }
   }
 
-  // GET /api/users - Retrieves a list of all users (Donors and Managers)
+  // GET /api/users - Retrieves a list of all users 
   @UseGuards(AdminGuard)
   @Get('users')
   async getAllUsers() {
