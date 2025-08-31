@@ -3,6 +3,7 @@
 #Source PDFs
 /Source_PDFs
 *.pdf
+/.claude
 
 # dependencies
 /node_modules
