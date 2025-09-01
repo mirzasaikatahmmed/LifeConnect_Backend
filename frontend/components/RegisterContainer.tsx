@@ -21,12 +21,26 @@ export default function RegisterContainer() {
   };
 
   return (
-    <div>
-      <h1>Register</h1>
-      <RegisterForm onSubmit={handleRegister} />
-      {isLoading && <p>Creating account...</p>}
-      <div>
-        <Link href="/login">Already have an account? Sign in</Link>
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1 className="auth-title">Create Account</h1>
+          <p className="auth-subtitle">Join LifeConnect and start building communities</p>
+        </div>
+        
+        {isLoading && (
+          <div className="auth-message">
+            <p>Creating account...</p>
+          </div>
+        )}
+        
+        <RegisterForm onSubmit={handleRegister} />
+        
+        <div className="auth-links">
+          <Link href="/login" className="auth-link">
+            Already have an account? Sign in
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -17,41 +17,47 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="email">Email</label>
+    <form onSubmit={handleSubmit} className="auth-form">
+      <div className="form-group">
+        <label htmlFor="email" className="form-label">Email</label>
         <input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className="form-input"
+          placeholder="Enter your email"
           required
         />
       </div>
       
-      <div>
-        <label htmlFor="password">Password</label>
+      <div className="form-group">
+        <label htmlFor="password" className="form-label">Password</label>
         <input
           id="password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="form-input"
+          placeholder="Create a password"
           required
         />
       </div>
       
-      <div>
-        <label htmlFor="confirmPassword">Confirm Password</label>
+      <div className="form-group">
+        <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
         <input
           id="confirmPassword"
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          className="form-input"
+          placeholder="Confirm your password"
           required
         />
       </div>
       
-      <button type="submit">Sign Up</button>
+      <button type="submit" className="auth-button">Sign Up</button>
     </form>
   );
 }
