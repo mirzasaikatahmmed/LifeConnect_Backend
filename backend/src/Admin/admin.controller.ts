@@ -91,6 +91,24 @@ export class AdminController {
     }
   }
 
+  // POST /api/admin-register - Admin registration endpoint (forces admin role)
+  @Post('admin-register')
+  async registerAdmin(@Body() createUserDto: CreateUserDto) {
+    try {
+      // Check if admin with this email already exists
+      const existingAdmin = await this.adminService.findAdminByEmail(createUserDto.email);
+      if (existingAdmin) {
+        throw new HttpException('Admin with this email already exists', HttpStatus.CONFLICT);
+      }
+      return await this.adminService.registerAdmin(createUserDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to register admin account', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // PUT /api/users/:id - Updates a user account
   @UseGuards(AdminGuard)
   @Put('users/:id')
@@ -146,7 +164,6 @@ export class AdminController {
   }
 
   // GET /api/roles - Retrieves a list of all available roles
-  @UseGuards(AdminGuard)
   @Get('roles')
   async getAllRoles() {
     try {

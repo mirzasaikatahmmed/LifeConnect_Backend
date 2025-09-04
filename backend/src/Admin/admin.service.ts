@@ -136,6 +136,49 @@ export class AdminService {
     return await this.userRepository.save(admin);
   }
 
+  // Register a new admin account (enforces admin role)
+  async registerAdmin(createUserDto: CreateUserDto): Promise<User> {
+    const bcrypt = require('bcrypt');
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      saltRounds,
+    );
+
+    // Find admin role (ignore roleId from DTO, always use admin role)
+    const adminRole = await this.roleRepository.findOne({
+      where: { name: 'admin', isActive: true },
+    });
+
+    if (!adminRole) {
+      throw new Error('Admin role not found or is inactive. Please ensure admin role exists and is active.');
+    }
+
+    // Create admin user (always with admin role, ignore roleId from DTO)
+    const admin = this.userRepository.create({
+      name: createUserDto.name,
+      email: createUserDto.email,
+      password: hashedPassword,
+      phoneNumber: createUserDto.phoneNumber,
+      bloodType: createUserDto.bloodType,
+      userType: 'admin',  // Force admin userType
+      roleId: adminRole.id,  // Force admin roleId
+      isActive: true,
+      isVerified: false,
+    });
+
+    const savedAdmin = await this.userRepository.save(admin);
+
+    // Return admin with role information populated
+    const adminWithRole = await this.findUserById(savedAdmin.id);
+    if (!adminWithRole) {
+      throw new Error('Failed to retrieve created admin');
+    }
+    return adminWithRole;
+  }
+
   // Update a user account
   async updateUser(
     id: number,

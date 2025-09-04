@@ -7,7 +7,7 @@ This document provides comprehensive documentation for all Admin APIs in the Lif
 
 ## Base URL
 ```
-http://localhost:3007
+http://localhost:3006
 ```
 
 ## Authentication
@@ -79,6 +79,86 @@ Content-Type: application/json
   "phoneNumber": "+1234567890",
   "userType": "admin",
   "roleId": 1
+}
+```
+
+### 1.3 Admin Registration
+**Endpoint:** `POST /api/admin-register`  
+**Description:** Register a new admin account (automatically assigns admin role)  
+**Authentication:** Not required  
+
+**Request Body:**
+```json
+{
+  "name": "New Admin",
+  "email": "newadmin@lifeconnect.com",
+  "password": "SecurePass123!",
+  "phoneNumber": "+1234567890",
+  "roleId": 1
+}
+```
+
+**Field Validation Requirements:**
+- `name`: Required string (2-50 characters)
+- `email`: Required valid email address
+- `password`: Required strong password (min 8 chars, 1 lowercase, 1 uppercase, 1 number, 1 symbol)
+- `phoneNumber`: Required string
+- `roleId`: Required integer (must be 1 for admin role)
+- `bloodType`: Optional string (A+, A-, B+, B-, AB+, AB-, O+, O-)
+
+**Note:** This endpoint automatically creates an admin account with admin role. The `roleId` must be set to 1 (admin role).
+
+**Response:**
+```json
+{
+  "id": 40,
+  "email": "newadmin@lifeconnect.com",
+  "password": "$2b$10$x421EoGb.2kx3bJd9XRrRuerilr1I9b6vXOAdiKctRc4YXRAo01xa",
+  "name": "New Admin",
+  "phoneNumber": "+1234567890",
+  "bloodType": null,
+  "userType": "admin",
+  "role": {
+    "id": 1,
+    "name": "admin",
+    "description": "System administrator with full access",
+    "permissions": ["create", "read", "update", "delete", "manage_users", "manage_roles", "send_alerts", "view_reports"],
+    "isActive": true,
+    "createdAt": "2025-08-15T17:29:58.214Z",
+    "updatedAt": "2025-08-15T17:29:58.214Z"
+  },
+  "roleId": 1,
+  "isActive": true,
+  "isVerified": false,
+  "createdAt": "2025-09-04T18:28:04.198Z",
+  "updatedAt": "2025-09-04T18:28:04.198Z"
+}
+```
+
+**Error Responses:**
+
+**400 Bad Request - Validation Errors:**
+```json
+{
+  "message": [
+    "Password must be at least 8 characters long and contain at least one lowercase letter, one uppercase letter, one number, and one symbol",
+    "Phone number must be a string",
+    "Phone number is required",
+    "Role ID must be greater than 0",
+    "Role ID must be an integer",
+    "Role ID must be a number"
+  ],
+  "error": "Bad Request",
+  "statusCode": 400
+}
+```
+
+**409 Conflict - Admin Already Exists:**
+```json
+{
+  "message": "Admin with this email already exists",
+  "error": "Conflict",
+  "statusCode": 409
 }
 ```
 
@@ -185,7 +265,7 @@ Content-Type: application/json
 ### 3.1 Get All Roles
 **Endpoint:** `GET /api/roles`  
 **Description:** Retrieve all available roles  
-**Authentication:** Required  
+**Authentication:** Not required  
 
 **Response:**
 ```json
@@ -707,9 +787,9 @@ Content-Type: application/json
 
 ## Notes
 
-1. **Authentication**: All endpoints require a valid JWT token in the Authorization header except for login and bootstrap-admin endpoints.
+1. **Authentication**: All endpoints require a valid JWT token in the Authorization header except for login, bootstrap-admin, admin-register, and roles endpoints.
 
-2. **Base URL**: The server runs on port 3007 by default (configurable via `PORT` environment variable).
+2. **Base URL**: The server runs on port 3006 by default (configurable via `PORT` environment variable).
 
 3. **Database**: The system uses PostgreSQL database with TypeORM.
 
