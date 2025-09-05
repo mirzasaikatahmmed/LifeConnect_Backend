@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   IsEmail,
   IsString,
@@ -17,7 +18,7 @@ export class DonorRegisterDto {
   })
   password: string;
 
-  // @IsOptional()
+  @IsOptional()
   @IsString()
   name?: string;
 
