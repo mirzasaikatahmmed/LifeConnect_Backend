@@ -19,7 +19,7 @@ import {
   AlertResponseDto,
 } from './dto/alert.dto';
 
-@Controller('admin/alerts')
+@Controller('api/alerts')
 @UseGuards(AdminGuard)
 export class AlertController {
   constructor(private readonly alertService: AlertService) {}
