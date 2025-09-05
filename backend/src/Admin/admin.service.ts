@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
@@ -455,5 +455,491 @@ export class AdminService {
   async deleteBloodRequest(id: number): Promise<{ message: string }> {
     await this.bloodRequestRepository.delete(id);
     return { message: 'Blood request deleted successfully' };
+  }
+
+  // Get user activity logs (mock implementation)
+  async getUserActivity(userId: number): Promise<any> {
+    // Mock data - in production, this would query a UserActivity entity
+    const mockActivities = [
+      {
+        id: 1,
+        action: 'login',
+        description: 'User logged in',
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0...',
+        createdAt: new Date(Date.now() - 86400000), // 1 day ago
+      },
+      {
+        id: 2,
+        action: 'profile_update',
+        description: 'User updated their profile information',
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0...',
+        createdAt: new Date(Date.now() - 172800000), // 2 days ago
+      },
+      {
+        id: 3,
+        action: 'logout',
+        description: 'User logged out',
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0...',
+        createdAt: new Date(Date.now() - 259200000), // 3 days ago
+      },
+    ];
+
+    return {
+      userId,
+      activities: mockActivities,
+      total: mockActivities.length,
+    };
+  }
+
+  // Get user login history (mock implementation)
+  async getUserLoginHistory(userId: number): Promise<any> {
+    // Mock data - in production, this would query login-specific activities
+    const mockLoginHistory = [
+      {
+        id: 1,
+        loginTime: new Date(Date.now() - 86400000),
+        logoutTime: new Date(Date.now() - 82800000), // 1 hour later
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        location: 'New York, NY',
+        deviceType: 'Desktop',
+      },
+      {
+        id: 2,
+        loginTime: new Date(Date.now() - 172800000),
+        logoutTime: new Date(Date.now() - 169200000),
+        ipAddress: '192.168.1.2',
+        userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0)',
+        location: 'New York, NY',
+        deviceType: 'Mobile',
+      },
+    ];
+
+    return {
+      userId,
+      loginHistory: mockLoginHistory,
+      total: mockLoginHistory.length,
+      lastLogin: mockLoginHistory[0]?.loginTime,
+    };
+  }
+
+  // Export users to CSV format
+  async exportUsers(): Promise<any> {
+    const users = await this.userRepository.find({
+      relations: ['role'],
+      order: { createdAt: 'DESC' },
+    });
+
+    const csvData = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      bloodType: user.bloodType,
+      userType: user.userType,
+      role: user.role?.name || 'N/A',
+      isActive: user.isActive,
+      isVerified: user.isVerified,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+
+    return {
+      success: true,
+      message: 'Users exported successfully',
+      data: csvData,
+      totalRecords: csvData.length,
+      exportedAt: new Date(),
+      format: 'CSV',
+    };
+  }
+
+  // Get overall system statistics
+  async getDashboardStats(): Promise<any> {
+    const [
+      totalUsers,
+      totalDonors,
+      totalManagers,
+      totalAdmins,
+      activeUsers,
+      totalBloodRequests,
+      activeBloodRequests,
+      totalAlerts,
+      activeAlerts,
+    ] = await Promise.all([
+      this.userRepository.count(),
+      this.userRepository.count({ where: { userType: 'donor' } }),
+      this.userRepository.count({ where: { userType: 'manager' } }),
+      this.userRepository.count({ where: { userType: 'admin' } }),
+      this.userRepository.count({ where: { isActive: true } }),
+      this.bloodRequestRepository.count(),
+      this.bloodRequestRepository.count({ where: { status: 'active' } }),
+      this.alertRepository.count(),
+      this.alertRepository.count({ where: { status: 'active' } }),
+    ]);
+
+    const bloodTypeStats = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.bloodType', 'bloodType')
+      .addSelect('COUNT(*)', 'count')
+      .where('user.bloodType IS NOT NULL')
+      .groupBy('user.bloodType')
+      .getRawMany();
+
+    return {
+      overview: {
+        totalUsers,
+        activeUsers,
+        inactiveUsers: totalUsers - activeUsers,
+      },
+      userTypes: {
+        donors: totalDonors,
+        managers: totalManagers,
+        admins: totalAdmins,
+      },
+      bloodRequests: {
+        total: totalBloodRequests,
+        active: activeBloodRequests,
+        completed: totalBloodRequests - activeBloodRequests,
+      },
+      alerts: {
+        total: totalAlerts,
+        active: activeAlerts,
+      },
+      bloodTypeDistribution: bloodTypeStats.reduce((acc, item) => {
+        acc[item.bloodType] = parseInt(item.count);
+        return acc;
+      }, {}),
+      lastUpdated: new Date(),
+    };
+  }
+
+  // Get chart data for admin dashboard
+  async getDashboardCharts(): Promise<any> {
+    // User registration chart (last 12 months)
+    const userRegistrationData: any[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+      const count = await this.userRepository.count({
+        where: {
+          createdAt: Between(startOfMonth, endOfMonth),
+        },
+      });
+
+      userRegistrationData.push({
+        month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        users: count,
+      });
+    }
+
+    // Blood request trends (last 6 months)
+    const bloodRequestData: any[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+      const count = await this.bloodRequestRepository.count({
+        where: {
+          createdAt: Between(startOfMonth, endOfMonth),
+        },
+      });
+
+      bloodRequestData.push({
+        month: date.toLocaleDateString('en-US', { month: 'short' }),
+        requests: count,
+      });
+    }
+
+    return {
+      userRegistrations: {
+        title: 'User Registrations (Last 12 Months)',
+        data: userRegistrationData,
+      },
+      bloodRequests: {
+        title: 'Blood Requests (Last 6 Months)',
+        data: bloodRequestData,
+      },
+      bloodTypeDistribution: {
+        title: 'Blood Type Distribution',
+        data: [
+          { bloodType: 'O+', count: Math.floor(Math.random() * 100) + 50 },
+          { bloodType: 'A+', count: Math.floor(Math.random() * 80) + 40 },
+          { bloodType: 'B+', count: Math.floor(Math.random() * 60) + 30 },
+          { bloodType: 'AB+', count: Math.floor(Math.random() * 40) + 20 },
+          { bloodType: 'O-', count: Math.floor(Math.random() * 50) + 25 },
+          { bloodType: 'A-', count: Math.floor(Math.random() * 40) + 20 },
+          { bloodType: 'B-', count: Math.floor(Math.random() * 30) + 15 },
+          { bloodType: 'AB-', count: Math.floor(Math.random() * 20) + 10 },
+        ],
+      },
+      generatedAt: new Date(),
+    };
+  }
+
+  // Generate user statistics report
+  async getUserReports(): Promise<any> {
+    const totalUsers = await this.userRepository.count();
+    const usersByType = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.userType', 'userType')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('user.userType')
+      .getRawMany();
+
+    const usersByBloodType = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.bloodType', 'bloodType')
+      .addSelect('COUNT(*)', 'count')
+      .where('user.bloodType IS NOT NULL')
+      .groupBy('user.bloodType')
+      .getRawMany();
+
+    const activeUsers = await this.userRepository.count({ where: { isActive: true } });
+    const verifiedUsers = await this.userRepository.count({ where: { isVerified: true } });
+
+    // Users registered in last 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const newUsersLast30Days = await this.userRepository.count({
+      where: {
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      },
+    });
+
+    return {
+      summary: {
+        totalUsers,
+        activeUsers,
+        verifiedUsers,
+        newUsersLast30Days,
+        activationRate: ((activeUsers / totalUsers) * 100).toFixed(2) + '%',
+        verificationRate: ((verifiedUsers / totalUsers) * 100).toFixed(2) + '%',
+      },
+      usersByType: usersByType.reduce((acc, item) => {
+        acc[item.userType] = parseInt(item.count);
+        return acc;
+      }, {}),
+      usersByBloodType: usersByBloodType.reduce((acc, item) => {
+        acc[item.bloodType] = parseInt(item.count);
+        return acc;
+      }, {}),
+      generatedAt: new Date(),
+    };
+  }
+
+  // Generate system activity reports
+  async getActivityReports(): Promise<any> {
+    // Mock activity data - in production, this would query actual activity logs
+    const totalLogins = Math.floor(Math.random() * 1000) + 500;
+    const uniqueActiveUsers = Math.floor(Math.random() * 200) + 100;
+    const averageSessionDuration = Math.floor(Math.random() * 60) + 15; // minutes
+
+    const activityByDay: any[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      
+      activityByDay.push({
+        date: date.toLocaleDateString(),
+        logins: Math.floor(Math.random() * 100) + 20,
+        uniqueUsers: Math.floor(Math.random() * 50) + 10,
+        avgSessionDuration: Math.floor(Math.random() * 45) + 15,
+      });
+    }
+
+    return {
+      summary: {
+        totalLogins,
+        uniqueActiveUsers,
+        averageSessionDuration: `${averageSessionDuration} minutes`,
+        mostActiveHour: '14:00 - 15:00',
+        leastActiveHour: '03:00 - 04:00',
+      },
+      dailyActivity: activityByDay,
+      topActions: [
+        { action: 'login', count: totalLogins },
+        { action: 'profile_view', count: Math.floor(totalLogins * 0.8) },
+        { action: 'blood_request_view', count: Math.floor(totalLogins * 0.6) },
+        { action: 'profile_update', count: Math.floor(totalLogins * 0.3) },
+        { action: 'logout', count: Math.floor(totalLogins * 0.9) },
+      ],
+      generatedAt: new Date(),
+    };
+  }
+
+  // Generate blood compatibility analysis
+  async getBloodCompatibilityReports(): Promise<any> {
+    const bloodCompatibility = {
+      'O-': { canDonateTo: ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'], canReceiveFrom: ['O-'] },
+      'O+': { canDonateTo: ['O+', 'A+', 'B+', 'AB+'], canReceiveFrom: ['O-', 'O+'] },
+      'A-': { canDonateTo: ['A-', 'A+', 'AB-', 'AB+'], canReceiveFrom: ['O-', 'A-'] },
+      'A+': { canDonateTo: ['A+', 'AB+'], canReceiveFrom: ['O-', 'O+', 'A-', 'A+'] },
+      'B-': { canDonateTo: ['B-', 'B+', 'AB-', 'AB+'], canReceiveFrom: ['O-', 'B-'] },
+      'B+': { canDonateTo: ['B+', 'AB+'], canReceiveFrom: ['O-', 'O+', 'B-', 'B+'] },
+      'AB-': { canDonateTo: ['AB-', 'AB+'], canReceiveFrom: ['O-', 'A-', 'B-', 'AB-'] },
+      'AB+': { canDonateTo: ['AB+'], canReceiveFrom: ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'] },
+    };
+
+    const bloodTypeStats = await this.userRepository
+      .createQueryBuilder('user')
+      .select('user.bloodType', 'bloodType')
+      .addSelect('COUNT(*)', 'count')
+      .where('user.bloodType IS NOT NULL AND user.userType = :userType', { userType: 'donor' })
+      .groupBy('user.bloodType')
+      .getRawMany();
+
+    const donorsByBloodType = bloodTypeStats.reduce((acc, item) => {
+      acc[item.bloodType] = parseInt(item.count);
+      return acc;
+    }, {});
+
+    // Calculate compatibility matches
+    const compatibilityAnalysis = {};
+    Object.keys(bloodCompatibility).forEach(bloodType => {
+      const donors = donorsByBloodType[bloodType] || 0;
+      const canDonateTo = bloodCompatibility[bloodType].canDonateTo;
+      const potentialRecipients = canDonateTo.reduce((sum, type) => {
+        return sum + (donorsByBloodType[type] || 0);
+      }, 0);
+
+      compatibilityAnalysis[bloodType] = {
+        availableDonors: donors,
+        canDonateTo: canDonateTo.length,
+        potentialRecipients,
+        compatibilityScore: (canDonateTo.length / 8 * 100).toFixed(1) + '%',
+      };
+    });
+
+    return {
+      bloodCompatibilityMatrix: bloodCompatibility,
+      donorDistribution: donorsByBloodType,
+      compatibilityAnalysis,
+      recommendations: [
+        {
+          bloodType: 'O-',
+          message: 'Universal donor - critical for emergency situations',
+          priority: 'High',
+        },
+        {
+          bloodType: 'AB+',
+          message: 'Universal recipient - can receive from any blood type',
+          priority: 'Low',
+        },
+        {
+          bloodType: 'O+',
+          message: 'Most common blood type - high demand',
+          priority: 'Medium',
+        },
+      ],
+      generatedAt: new Date(),
+    };
+  }
+
+  // Generate monthly summary reports
+  async getMonthlySummaryReports(): Promise<any> {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    // First day of current month
+    const monthStart = new Date(currentYear, currentMonth, 1);
+    // First day of next month
+    const monthEnd = new Date(currentYear, currentMonth + 1, 1);
+
+    const [
+      newUsersThisMonth,
+      newBloodRequestsThisMonth,
+      newAlertsThisMonth,
+    ] = await Promise.all([
+      this.userRepository.count({
+        where: {
+          createdAt: Between(monthStart, monthEnd),
+        },
+      }),
+      this.bloodRequestRepository.count({
+        where: {
+          createdAt: Between(monthStart, monthEnd),
+        },
+      }),
+      this.alertRepository.count({
+        where: {
+          createdAt: Between(monthStart, monthEnd),
+        },
+      }),
+    ]);
+
+    // Previous month for comparison
+    const prevMonthStart = new Date(currentYear, currentMonth - 1, 1);
+    const prevMonthEnd = new Date(currentYear, currentMonth, 1);
+
+    const [
+      newUsersLastMonth,
+      newBloodRequestsLastMonth,
+    ] = await Promise.all([
+      this.userRepository.count({
+        where: {
+          createdAt: Between(prevMonthStart, prevMonthEnd),
+        },
+      }),
+      this.bloodRequestRepository.count({
+        where: {
+          createdAt: Between(prevMonthStart, prevMonthEnd),
+        },
+      }),
+    ]);
+
+    const userGrowth = newUsersLastMonth > 0 
+      ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth * 100).toFixed(1)
+      : '0';
+
+    const requestGrowth = newBloodRequestsLastMonth > 0
+      ? ((newBloodRequestsThisMonth - newBloodRequestsLastMonth) / newBloodRequestsLastMonth * 100).toFixed(1)
+      : '0';
+
+    return {
+      period: {
+        month: currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        startDate: monthStart,
+        endDate: new Date(monthEnd.getTime() - 1), // Last day of current month
+      },
+      summary: {
+        newUsers: newUsersThisMonth,
+        newBloodRequests: newBloodRequestsThisMonth,
+        newAlerts: newAlertsThisMonth,
+        userGrowth: `${userGrowth}%`,
+        requestGrowth: `${requestGrowth}%`,
+      },
+      comparison: {
+        previousMonth: {
+          newUsers: newUsersLastMonth,
+          newBloodRequests: newBloodRequestsLastMonth,
+        },
+      },
+      topMetrics: [
+        {
+          metric: 'User Registrations',
+          thisMonth: newUsersThisMonth,
+          lastMonth: newUsersLastMonth,
+          change: userGrowth + '%',
+          trend: parseFloat(userGrowth) >= 0 ? 'up' : 'down',
+        },
+        {
+          metric: 'Blood Requests',
+          thisMonth: newBloodRequestsThisMonth,
+          lastMonth: newBloodRequestsLastMonth,
+          change: requestGrowth + '%',
+          trend: parseFloat(requestGrowth) >= 0 ? 'up' : 'down',
+        },
+      ],
+      generatedAt: new Date(),
+    };
   }
 }

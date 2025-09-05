@@ -427,4 +427,117 @@ export class AdminController {
       throw new HttpException('Failed to delete blood request', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
+  // GET /api/users/:id/activity - Get user activity logs
+  @UseGuards(AdminGuard)
+  @Get('users/:id/activity')
+  async getUserActivity(@Param('id', ParseIntPipe) id: number) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.getUserActivity(id);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve user activity', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/users/:id/login-history - Get user login history
+  @UseGuards(AdminGuard)
+  @Get('users/:id/login-history')
+  async getUserLoginHistory(@Param('id', ParseIntPipe) id: number) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.getUserLoginHistory(id);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve user login history', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/users/export - Export users to CSV/Excel
+  @UseGuards(AdminGuard)
+  @Get('users/export')
+  async exportUsers() {
+    try {
+      return await this.adminService.exportUsers();
+    } catch (error) {
+      throw new HttpException('Failed to export users', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/dashboard/stats - Overall system statistics
+  @UseGuards(AdminGuard)
+  @Get('dashboard/stats')
+  async getDashboardStats() {
+    try {
+      return await this.adminService.getDashboardStats();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve dashboard statistics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/dashboard/charts - Chart data for admin dashboard
+  @UseGuards(AdminGuard)
+  @Get('dashboard/charts')
+  async getDashboardCharts() {
+    try {
+      return await this.adminService.getDashboardCharts();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve dashboard charts data', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/users - User statistics
+  @UseGuards(AdminGuard)
+  @Get('reports/users')
+  async getUserReports() {
+    try {
+      return await this.adminService.getUserReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate user reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/activity - System activity reports
+  @UseGuards(AdminGuard)
+  @Get('reports/activity')
+  async getActivityReports() {
+    try {
+      return await this.adminService.getActivityReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate activity reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/blood-compatibility - Blood compatibility analysis
+  @UseGuards(AdminGuard)
+  @Get('reports/blood-compatibility')
+  async getBloodCompatibilityReports() {
+    try {
+      return await this.adminService.getBloodCompatibilityReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate blood compatibility reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/monthly-summary - Monthly summary reports
+  @UseGuards(AdminGuard)
+  @Get('reports/monthly-summary')
+  async getMonthlySummaryReports() {
+    try {
+      return await this.adminService.getMonthlySummaryReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate monthly summary reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
