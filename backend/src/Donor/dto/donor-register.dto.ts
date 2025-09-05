@@ -17,15 +17,15 @@ export class DonorRegisterDto {
   })
   password: string;
 
-  @IsOptional()
+  // @IsOptional()
   @IsString()
   name?: string;
 
-  @IsOptional()
+  // @IsOptional()
   @IsString()
-  bloodGroup?: string;
+  bloodType?: string;
 
-  @IsOptional()
+  // @IsOptional()
   @IsString()
   phoneNumber?: string;
 }

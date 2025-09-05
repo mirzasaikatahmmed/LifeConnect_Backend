@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../Admin/entities/user.entity';
+import { User } from 'src/Admin/entities/user.entity';
 import { BloodDonationHistory } from './entities/blooddonationhistory.entity';
-import { BloodRequest } from '../Manager/Entities/bloodrequest.entity';
+import { BloodRequest } from 'src/Manager/Entities/bloodrequest.entity';
 import { DonorRegisterDto } from './dto/donor-register.dto';
 import { DonorLoginDto } from './dto/donor-login.dto';
 import { DonorUpdateDto } from './dto/donor-update.dto';
@@ -25,7 +25,7 @@ export class DonorService {
     @InjectRepository(BloodRequest)
     private requestRepo: Repository<BloodRequest>,
     private mailer: MailerService,
-  ) {}
+  ) { }
 
   private signToken(payload: any) {
     const secret = process.env.JWT_SECRET || 'lifeconnect-secret-key';
@@ -44,7 +44,7 @@ export class DonorService {
       email: dto.email,
       password: passwordHash,
       name: dto.name,
-      bloodType: dto.bloodGroup,
+      bloodType: dto.bloodType,
       phoneNumber: dto.phoneNumber,
       userType: 'donor',
       roleId: 3, // Assuming role ID 3 is for donors
@@ -61,7 +61,7 @@ export class DonorService {
   }
 
   async login(dto: DonorLoginDto) {
-    const user = await this.userRepo.findOne({ 
+    const user = await this.userRepo.findOne({
       where: { email: dto.email, userType: 'donor' },
       relations: ['role']
     });
@@ -79,7 +79,7 @@ export class DonorService {
   }
 
   async me(userId: number) {
-    const user = await this.userRepo.findOne({ 
+    const user = await this.userRepo.findOne({
       where: { id: userId, userType: 'donor' },
       relations: ['role']
     });
@@ -90,7 +90,7 @@ export class DonorService {
   }
 
   async updateProfile(userId: number, dto: DonorUpdateDto) {
-    const user = await this.userRepo.findOne({ 
+    const user = await this.userRepo.findOne({
       where: { id: userId, userType: 'donor' }
     });
     if (!user) throw new NotFoundException('User not found');
@@ -127,7 +127,7 @@ export class DonorService {
 
   // Donation History CRUD operations (replacing History entity)
   async createHistory(userId: number, donationData: any) {
-    const user = await this.userRepo.findOne({ 
+    const user = await this.userRepo.findOne({
       where: { id: userId, userType: 'donor' }
     });
     if (!user) throw new NotFoundException('User not found');
@@ -146,7 +146,7 @@ export class DonorService {
       where: { id: donationId, user: { id: userId } },
       relations: ['user'],
     });
-    
+
     if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
     return bloodDonation;
   }
@@ -155,7 +155,7 @@ export class DonorService {
     const bloodDonation = await this.bloodDonationHistoryRepo.findOne({
       where: { id: donationId, user: { id: userId } },
     });
-    
+
     if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
 
     bloodDonation.centerName = donationData.centerName ?? bloodDonation.centerName;
@@ -168,7 +168,7 @@ export class DonorService {
     const bloodDonation = await this.bloodDonationHistoryRepo.findOne({
       where: { id: donationId, user: { id: userId } },
     });
-    
+
     if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
 
     Object.keys(donationData).forEach(key => {
@@ -184,10 +184,26 @@ export class DonorService {
     const bloodDonation = await this.bloodDonationHistoryRepo.findOne({
       where: { id: donationId, user: { id: userId } },
     });
-    
+
     if (!bloodDonation) throw new NotFoundException('Blood donation record not found');
 
     await this.bloodDonationHistoryRepo.remove(bloodDonation);
     return { success: true, message: 'Blood donation record deleted successfully' };
+  }
+
+
+
+  //additional method to get all donor profiles
+  async getAllDonorProfiles() {
+    const donors = await this.userRepo.find({
+      where: { userType: 'donor' },
+      order: { id: 'ASC' }, // optional: order by ID
+    });
+
+
+
+
+    // Remove passwords before sending
+    return donors.map(({ password, ...safe }) => safe);
   }
 }

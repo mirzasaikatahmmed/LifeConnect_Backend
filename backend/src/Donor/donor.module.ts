@@ -11,6 +11,7 @@ import { DonorController } from './donor.controller';
 import { JwtGuard } from './guards/jwt.guard';
 import { MailerService } from './mailer.service';
 
+
 // Debug logs to verify .env variables
 console.log('SMTP_USER from env:', process.env.SMTP_USER);
 console.log('SMTP_PASS from env:', process.env.SMTP_PASS);

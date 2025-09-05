@@ -19,7 +19,7 @@ import { JwtGuard } from './guards/jwt.guard';
 
 @Controller('donors')
 export class DonorController {
-  constructor(private readonly donorService: DonorService) {}
+  constructor(private readonly donorService: DonorService) { }
 
   // 1) POST /api/donors/register
   @Post('register')
@@ -75,7 +75,7 @@ export class DonorController {
   createHistory(@Req() req: any, @Body() historyData: any) {
     return this.donorService.createHistory(req.user.sub, historyData);
   }
-
+//editing
   // 10) GET /api/donors/history/:id
   @UseGuards(JwtGuard)
   @Get('history/:id')
@@ -103,4 +103,15 @@ export class DonorController {
   deleteHistory(@Req() req: any, @Param('id') id: number) {
     return this.donorService.deleteHistory(req.user.sub, id);
   }
+
+
+
+  // GET /donors/profiles
+  @UseGuards(JwtGuard) // protect route, only logged-in users can access
+  @Get('profiles')
+  getAllDonorProfiles() {
+    return this.donorService.getAllDonorProfiles();
+  }
+
+
 }

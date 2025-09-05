@@ -49,8 +49,8 @@ export class User {
   @OneToMany(() => Alert, (alert) => alert.createdBy)
   alerts: Alert[];
 
-  @Column()
-  roleId: number;
+  // @Column()
+  // roleId: number;
 
   @Column({ default: true })
   isActive: boolean;
