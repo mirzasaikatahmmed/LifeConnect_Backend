@@ -42,7 +42,10 @@ export class Alert {
   @Column({ nullable: true })
   userId: number;
 
-  @ManyToOne(() => User, (user) => user.alerts, { onDelete: 'CASCADE', nullable: true })
+  @ManyToOne(() => User, (user) => user.alerts, {
+    onDelete: 'CASCADE',
+    nullable: true,
+  })
   @JoinColumn({ name: 'userId' })
   createdBy: User;
 

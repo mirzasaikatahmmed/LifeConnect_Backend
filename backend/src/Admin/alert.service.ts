@@ -133,7 +133,7 @@ export class AlertService {
     }
 
     await this.alertRepository.update(
-      { id: expiredAlerts.map(alert => alert.id) as any },
+      { id: expiredAlerts.map((alert) => alert.id) as any },
       { status: 'expired' },
     );
 

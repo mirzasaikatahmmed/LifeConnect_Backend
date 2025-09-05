@@ -43,7 +43,10 @@ export class User {
   @OneToMany(() => BloodRequest, (request) => request.postedBy)
   bloodRequests: BloodRequest[];
 
-  @OneToMany(() => BloodDonationHistory, (bloodDonationHistory) => bloodDonationHistory.user)
+  @OneToMany(
+    () => BloodDonationHistory,
+    (bloodDonationHistory) => bloodDonationHistory.user,
+  )
   bloodDonationHistory: BloodDonationHistory[];
 
   @OneToMany(() => Alert, (alert) => alert.createdBy)

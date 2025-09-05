@@ -12,7 +12,9 @@ export class BloodDonationHistory {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.bloodDonationHistory, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.bloodDonationHistory, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
   @Column({ type: 'varchar', length: 100 })

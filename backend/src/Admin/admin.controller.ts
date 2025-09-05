@@ -1,9 +1,7 @@
 /* eslint-disable prettier/prettier */
- 
- 
-import { Controller, Get, Post, Body, Delete, Patch, Param, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Patch, Put, Param, UseGuards, HttpException, HttpStatus, ParseIntPipe } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, LoginDto, CreateRoleDto } from './admin.dto';
+import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, UpdateUserDto, LoginDto, CreateRoleDto, TestEmailDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
 import { CreateBloodRequestDto, UpdateBloodRequestDto } from '../Manager/dto files/bloodrequest.dto';
 
@@ -24,7 +22,7 @@ export class AdminController {
     }
   }
 
-  // GET /api/users - Retrieves a list of all users (Donors and Managers)
+  // GET /api/users - Retrieves a list of all users 
   @UseGuards(AdminGuard)
   @Get('users')
   async getAllUsers() {
@@ -93,10 +91,64 @@ export class AdminController {
     }
   }
 
+  // POST /api/admin-register - Admin registration endpoint (forces admin role)
+  @Post('admin-register')
+  async registerAdmin(@Body() createUserDto: CreateUserDto) {
+    try {
+      // Check if admin with this email already exists
+      const existingAdmin = await this.adminService.findAdminByEmail(createUserDto.email);
+      if (existingAdmin) {
+        throw new HttpException('Admin with this email already exists', HttpStatus.CONFLICT);
+      }
+      return await this.adminService.registerAdmin(createUserDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to register admin account', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PUT /api/users/:id - Updates a user account
+  @UseGuards(AdminGuard)
+  @Put('users/:id')
+  async updateUser(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.updateUser(id, updateUserDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to update user', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PATCH /api/users/:id - Partially updates a user account
+  @UseGuards(AdminGuard)
+  @Patch('users/:id')
+  async patchUser(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.updateUser(id, updateUserDto);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to patch user', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // DELETE /api/users/:id - Deletes a user account
   @UseGuards(AdminGuard)
   @Delete('users/:id')
-  async deleteUser(@Param('id') id: number) {
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
     try {
       const user = await this.adminService.findUserById(id);
       if (!user) {
@@ -112,7 +164,6 @@ export class AdminController {
   }
 
   // GET /api/roles - Retrieves a list of all available roles
-  @UseGuards(AdminGuard)
   @Get('roles')
   async getAllRoles() {
     try {
@@ -138,7 +189,7 @@ export class AdminController {
   // PATCH /api/users/:id/role - Updates a user's role
   @UseGuards(AdminGuard)
   @Patch('users/:id/role')
-  async updateUserRole(@Param('id') id: number, @Body() updateUserRoleDto: UpdateUserRoleDto) {
+  async updateUserRole(@Param('id', ParseIntPipe) id: number, @Body() updateUserRoleDto: UpdateUserRoleDto) {
     try {
       const user = await this.adminService.findUserById(id);
       if (!user) {
@@ -193,7 +244,7 @@ export class AdminController {
   // DELETE /api/alerts/:id - Deletes a system-wide alert
   @UseGuards(AdminGuard)
   @Delete('alerts/:id')
-  async deleteAlert(@Param('id') id: number) {
+  async deleteAlert(@Param('id', ParseIntPipe) id: number) {
     try {
       const alert = await this.adminService.findAlertById(id);
       if (!alert) {
@@ -241,7 +292,7 @@ export class AdminController {
   // POST /api/alerts/:id/send-email - Sends existing alert via email to all users
   @UseGuards(AdminGuard)
   @Post('alerts/:id/send-email')
-  async sendExistingAlert(@Param('id') id: number) {
+  async sendExistingAlert(@Param('id', ParseIntPipe) id: number) {
     try {
       const result = await this.adminService.sendExistingAlert(id);
       return {
@@ -279,9 +330,9 @@ export class AdminController {
   // POST /api/mailer/test-send - Create test user and send test email
   @UseGuards(AdminGuard)
   @Post('mailer/test-send')
-  async createTestUserAndSendEmail(@Body() body: { email: string }) {
+  async createTestUserAndSendEmail(@Body() testEmailDto: TestEmailDto) {
     try {
-      const result = await this.adminService.createTestUserAndSendEmail(body.email);
+      const result = await this.adminService.createTestUserAndSendEmail(testEmailDto.email);
       return {
         success: result.emailResult.success,
         message: 'Test user created and email sent',
@@ -315,7 +366,7 @@ export class AdminController {
   // GET /api/blood-requests/:id - Get blood request by ID
   @UseGuards(AdminGuard)
   @Get('blood-requests/:id')
-  async getBloodRequestById(@Param('id') id: number) {
+  async getBloodRequestById(@Param('id', ParseIntPipe) id: number) {
     try {
       const bloodRequest = await this.adminService.getBloodRequestById(id);
       if (!bloodRequest) {
@@ -344,7 +395,7 @@ export class AdminController {
   // PATCH /api/blood-requests/:id - Update blood request
   @UseGuards(AdminGuard)
   @Patch('blood-requests/:id')
-  async updateBloodRequest(@Param('id') id: number, @Body() updateBloodRequestDto: UpdateBloodRequestDto) {
+  async updateBloodRequest(@Param('id', ParseIntPipe) id: number, @Body() updateBloodRequestDto: UpdateBloodRequestDto) {
     try {
       const bloodRequest = await this.adminService.getBloodRequestById(id);
       if (!bloodRequest) {
@@ -362,7 +413,7 @@ export class AdminController {
   // DELETE /api/blood-requests/:id - Delete blood request
   @UseGuards(AdminGuard)
   @Delete('blood-requests/:id')
-  async deleteBloodRequest(@Param('id') id: number) {
+  async deleteBloodRequest(@Param('id', ParseIntPipe) id: number) {
     try {
       const bloodRequest = await this.adminService.getBloodRequestById(id);
       if (!bloodRequest) {
@@ -374,6 +425,119 @@ export class AdminController {
         throw error;
       }
       throw new HttpException('Failed to delete blood request', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/users/:id/activity - Get user activity logs
+  @UseGuards(AdminGuard)
+  @Get('users/:id/activity')
+  async getUserActivity(@Param('id', ParseIntPipe) id: number) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.getUserActivity(id);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve user activity', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/users/:id/login-history - Get user login history
+  @UseGuards(AdminGuard)
+  @Get('users/:id/login-history')
+  async getUserLoginHistory(@Param('id', ParseIntPipe) id: number) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return await this.adminService.getUserLoginHistory(id);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve user login history', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/users/export - Export users to CSV/Excel
+  @UseGuards(AdminGuard)
+  @Get('users/export')
+  async exportUsers() {
+    try {
+      return await this.adminService.exportUsers();
+    } catch (error) {
+      throw new HttpException('Failed to export users', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/dashboard/stats - Overall system statistics
+  @UseGuards(AdminGuard)
+  @Get('dashboard/stats')
+  async getDashboardStats() {
+    try {
+      return await this.adminService.getDashboardStats();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve dashboard statistics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/dashboard/charts - Chart data for admin dashboard
+  @UseGuards(AdminGuard)
+  @Get('dashboard/charts')
+  async getDashboardCharts() {
+    try {
+      return await this.adminService.getDashboardCharts();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve dashboard charts data', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/users - User statistics
+  @UseGuards(AdminGuard)
+  @Get('reports/users')
+  async getUserReports() {
+    try {
+      return await this.adminService.getUserReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate user reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/activity - System activity reports
+  @UseGuards(AdminGuard)
+  @Get('reports/activity')
+  async getActivityReports() {
+    try {
+      return await this.adminService.getActivityReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate activity reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/blood-compatibility - Blood compatibility analysis
+  @UseGuards(AdminGuard)
+  @Get('reports/blood-compatibility')
+  async getBloodCompatibilityReports() {
+    try {
+      return await this.adminService.getBloodCompatibilityReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate blood compatibility reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/monthly-summary - Monthly summary reports
+  @UseGuards(AdminGuard)
+  @Get('reports/monthly-summary')
+  async getMonthlySummaryReports() {
+    try {
+      return await this.adminService.getMonthlySummaryReports();
+    } catch (error) {
+      throw new HttpException('Failed to generate monthly summary reports', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
