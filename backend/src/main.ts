@@ -5,7 +5,6 @@ import * as dotenv from 'dotenv';
 import 'dotenv/config';
 
 dotenv.config();
-let server: any;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,14 +24,6 @@ async function bootstrap() {
   );
 
   await app.listen(process.env.PORT ?? 3000);
-}
-
-export default async function handler(req, res) {
-  if (!server) {
-    server = await bootstrap();
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-  return server(req, res);
 }
 
 void bootstrap();
