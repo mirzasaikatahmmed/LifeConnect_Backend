@@ -1,9 +1,11 @@
 [build]
+  base = "backend"
   command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
+  publish = "backend/dist"
+  functions = "backend/netlify/functions"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/main"
-  status = 200
+[[plugins]]
+  package = "@netlify/esbuild"
+
+  [plugins.inputs]
+  external_node_modules = ["@nestjs/microservices", "@nestjs/websockets", "@nestjs/platform-socket.io"]
