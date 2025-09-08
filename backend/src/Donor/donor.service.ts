@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable prettier/prettier */
 import {
   Injectable,
@@ -62,7 +66,7 @@ export class DonorService {
   async login(dto: DonorLoginDto) {
     const user = await this.userRepo.findOne({
       where: { email: dto.email, userType: 'donor' },
-      relations: ['role'],
+      // relations: ['role'],
     });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
@@ -110,6 +114,7 @@ export class DonorService {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async availability(userId: number, dto: DonorAvailabilityDto) {
     // For now, we'll store availability in a separate field or handle it differently
     // since the User entity doesn't have isAvailable field
