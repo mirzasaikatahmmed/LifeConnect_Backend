@@ -36,9 +36,9 @@ export class User {
   @Column({ default: 'donor' })
   userType: string; // 'donor', 'manager', 'admin'
 
-  @ManyToOne(() => Role, { eager: true })
-  @JoinColumn({ name: 'roleId' })
-  role: Role;
+  // @ManyToOne(() => Role, { eager: true })
+  // @JoinColumn({ name: 'roleId' })
+  // role: Role;
 
   @OneToMany(() => BloodRequest, (request) => request.postedBy)
   bloodRequests: BloodRequest[];
@@ -52,8 +52,8 @@ export class User {
   @OneToMany(() => Alert, (alert) => alert.createdBy)
   alerts: Alert[];
 
-  @Column()
-  roleId: number;
+  // @Column()
+  // roleId: number;
 
   @Column({ default: true })
   isActive: boolean;

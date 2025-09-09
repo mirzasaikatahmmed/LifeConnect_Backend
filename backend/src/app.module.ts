@@ -25,9 +25,7 @@ import { DonorModule } from './Donor/donor.module';
       database: process.env.DB_NAME || 'LifeConnect',
       autoLoadEntities: true,
       synchronize: true,
-      ssl: {
-        rejectUnauthorized: false,
-      },
+      ssl: false,
       extra: {
         // Force IPv4 resolution
         dnsLookup: (hostname, options, callback) =>
@@ -39,4 +37,4 @@ import { DonorModule } from './Donor/donor.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
