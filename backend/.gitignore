@@ -60,3 +60,7 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 ADMIN_API_README.md
+
+# Project-specific files that vary per developer
+src/app.module.ts
+src/Admin/entities/user.entity.ts
