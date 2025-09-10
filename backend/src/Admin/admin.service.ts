@@ -369,49 +369,49 @@ export class AdminService {
     };
   }
 
-  // Admin login method
+  // Universal login method - accepts any user type (admin, manager, donor)
   async loginAdmin(
     loginDto: LoginDto,
   ): Promise<{ access_token: string; admin: Omit<User, 'password'> }> {
     const bcrypt = require('bcrypt');
 
-    // Find admin by email (user with admin role)
-    const admin = await this.userRepository.findOne({
-      where: { email: loginDto.email, userType: 'admin' },
+    // Find user by email (any user type)
+    const user = await this.userRepository.findOne({
+      where: { email: loginDto.email },
       relations: ['role'],
     });
 
-    if (!admin) {
+    if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
-      admin.password,
+      user.password,
     );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Create JWT payload
+    // Create JWT payload with user's actual role and type
     const payload = {
-      sub: admin.id,
-      email: admin.email,
-      name: admin.name,
-      userType: admin.userType,
-      role: admin.role?.name || 'admin',
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+      userType: user.userType,
+      role: user.role?.name || user.userType,
     };
 
     // Generate JWT token
     const access_token = await this.jwtService.signAsync(payload);
 
-    // Return token and admin info (without password)
-    const { password, ...adminWithoutPassword } = admin;
+    // Return token and user info (without password)
+    const { password, ...userWithoutPassword } = user;
 
     return {
       access_token,
-      admin: adminWithoutPassword,
+      admin: userWithoutPassword,
     };
   }
 

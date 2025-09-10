@@ -9,7 +9,7 @@ import { CreateBloodRequestDto, UpdateBloodRequestDto } from '../Manager/dto fil
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  // POST /api/login - Admin login endpoint
+  // POST /api/login - Universal login endpoint (accepts any user type)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     try {
