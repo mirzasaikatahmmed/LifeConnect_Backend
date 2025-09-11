@@ -383,6 +383,8 @@ export class ManagerService {
   }
 
   async manageruserlogin(email: string, password: string) {
+    console.log(email)
+    console.log(password)
     const user = await this.userRepository.findOne({
       where: { email },
       relations: ['role'],
@@ -431,4 +433,13 @@ export class ManagerService {
     }
     return requests;
   }
+
+// manager.service.ts
+async getMyRequestCount(userId: number): Promise<number> {
+    return await this.requestRepository.count({
+        where: { 
+            userId: userId // যেই manager login করেছে তার request গুলো count করবে
+        }
+    });
+}
 }

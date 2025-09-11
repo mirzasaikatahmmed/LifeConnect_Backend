@@ -25,6 +25,8 @@ import { DonorModule } from './Donor/donor.module';
       database: process.env.DB_NAME || 'LifeConnect',
       autoLoadEntities: true,
       synchronize: true,
+
+
       ssl: {
         rejectUnauthorized: false,
       },
@@ -34,6 +36,7 @@ import { DonorModule } from './Donor/donor.module';
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
           require('dns').lookup(hostname, { ...options, family: 4 }, callback),
       },
+
     }),
   ],
   controllers: [AppController],

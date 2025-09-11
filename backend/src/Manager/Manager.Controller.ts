@@ -189,4 +189,11 @@ export class ManagerController {
     const userId = req.user.id || req.user.sub;
     return this.managerService.getallrequest(userId);
   }
+@Get('request/mycount')
+@UseGuards(ManagerGuard)
+async getMyRequestCount(@Req() req): Promise<{ totalRequests: number }> {
+    const userId = req.user.id || req.user.sub;
+    const totalRequests = await this.managerService.getMyRequestCount(userId);
+    return { totalRequests };
+}
 }
