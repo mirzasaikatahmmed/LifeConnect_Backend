@@ -196,4 +196,12 @@ async getMyRequestCount(@Req() req): Promise<{ totalRequests: number }> {
     const totalRequests = await this.managerService.getMyRequestCount(userId);
     return { totalRequests };
 }
+
+
+// Controller method
+@Get('getUserDataById/:id')
+getUserDataById(@Param('id',ParseIntPipe) id:number ): Promise<User> {
+  return this.managerService.getUserDataById(id);
+}
+
 }

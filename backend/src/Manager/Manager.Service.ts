@@ -422,6 +422,8 @@ export class ManagerService {
       },
     };
   }
+
+  
   async getallrequest(userId: number): Promise<BloodRequest[]> {
     const requests = await this.requestRepository.find({
       where: {
@@ -435,11 +437,22 @@ export class ManagerService {
   }
 
 // manager.service.ts
-async getMyRequestCount(userId: number): Promise<number> {
+   async getMyRequestCount(userId: number): Promise<number> {
     return await this.requestRepository.count({
         where: { 
             userId: userId // যেই manager login করেছে তার request গুলো count করবে
         }
     });
+}
+async getUserDataById(id: number): Promise<User> {
+  const user = await this.userRepository.findOne({ 
+    where: { id } 
+  });
+  
+  if (!user) {
+    throw new NotFoundException(`User with ID ${id} not found`);
+  }
+  
+  return user;
 }
 }
