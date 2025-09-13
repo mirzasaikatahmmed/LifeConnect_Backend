@@ -74,6 +74,15 @@ export class AdminService {
     });
   }
 
+  // Get current authenticated user
+  async getCurrentUser(userId: number): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['role'],
+      select: ['id', 'email', 'name', 'phoneNumber', 'bloodType', 'userType', 'isActive', 'isVerified', 'createdAt', 'updatedAt']
+    });
+  }
+
   // Create a new user
   async createUser(createUserDto: CreateUserDto): Promise<User> {
     const bcrypt = require('bcrypt');

@@ -1,8 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Delete, Patch, Put, Param, UseGuards, HttpException, HttpStatus, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete, Patch, Put, Param, UseGuards, HttpException, HttpStatus, ParseIntPipe, Request } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, UpdateUserDto, LoginDto, CreateRoleDto, TestEmailDto } from './admin.dto';
 import { AdminGuard } from './guards/admin.guard';
+import { AuthGuard } from './guards/auth.guard';
 import { CreateBloodRequestDto, UpdateBloodRequestDto } from '../Manager/dto files/bloodrequest.dto';
 
 @Controller('api')
@@ -19,6 +20,30 @@ export class AdminController {
         throw error;
       }
       throw new HttpException('Login failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/users/me - Get current authenticated user
+  @UseGuards(AuthGuard)
+  @Get('users/me')
+  async getCurrentUser(@Request() req) {
+    try {
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        throw new HttpException('User ID not found in token', HttpStatus.BAD_REQUEST);
+      }
+      
+      const user = await this.adminService.getCurrentUser(userId);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      
+      return user;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve current user', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
