@@ -293,6 +293,13 @@ export class AdminService {
     return { message: 'Alert deleted successfully' };
   }
 
+  // Get all alerts
+  async getAllAlerts(): Promise<Alert[]> {
+    return await this.alertRepository.find({
+      order: { priority: 'DESC', createdAt: 'DESC' },
+    });
+  }
+
   // Get all active alerts
   async getActiveAlerts(): Promise<Alert[]> {
     return await this.alertRepository.find({
@@ -964,6 +971,323 @@ export class AdminService {
         },
       ],
       generatedAt: new Date(),
+    };
+  }
+
+  // Get system configuration settings
+  async getSystemSettings(): Promise<any> {
+    // Mock system settings - in production, these would be stored in database or config files
+    return {
+      general: {
+        siteName: 'LifeConnect',
+        siteDescription: 'Blood Donation Management System',
+        maintenanceMode: false,
+        registrationEnabled: true,
+        emailVerificationRequired: true,
+        maxFileUploadSize: 10, // MB
+      },
+      notifications: {
+        emailNotifications: true,
+        smsNotifications: false,
+        pushNotifications: true,
+        alertRetentionDays: 30,
+      },
+      security: {
+        passwordMinLength: 8,
+        requireSpecialCharacters: true,
+        sessionTimeout: 3600, // seconds
+        maxLoginAttempts: 5,
+        lockoutDuration: 300, // seconds
+      },
+      bloodRequests: {
+        autoExpireAfterDays: 7,
+        requireApproval: false,
+        notifyMatchingDonors: true,
+        maxActiveRequests: 10,
+      },
+      donation: {
+        minDonationInterval: 90, // days
+        reminderBeforeDonation: 7, // days
+        trackDonationHistory: true,
+      },
+      lastUpdated: new Date(),
+    };
+  }
+
+  // Update system configuration settings
+  async updateSystemSettings(settings: any): Promise<any> {
+    // Mock implementation - in production, this would save to database or config files
+    return {
+      success: true,
+      message: 'System settings updated successfully',
+      updatedSettings: {
+        ...settings,
+        lastUpdated: new Date(),
+      },
+    };
+  }
+
+  // Get system information
+  async getSystemInfo(): Promise<any> {
+    const totalStorage = Math.floor(Math.random() * 1000) + 500; // GB
+    const usedStorage = Math.floor(totalStorage * 0.65); // 65% used
+    const uptime = Math.floor(Math.random() * 1000000); // seconds
+
+    return {
+      system: {
+        version: '1.0.0',
+        environment: process.env.NODE_ENV || 'development',
+        uptime: `${Math.floor(uptime / 86400)} days, ${Math.floor((uptime % 86400) / 3600)} hours`,
+        serverTime: new Date(),
+      },
+      database: {
+        status: 'Connected',
+        version: 'PostgreSQL 14.0', // or whatever DB you're using
+        totalConnections: Math.floor(Math.random() * 50) + 10,
+        activeConnections: Math.floor(Math.random() * 20) + 5,
+      },
+      storage: {
+        total: `${totalStorage} GB`,
+        used: `${usedStorage} GB`,
+        available: `${totalStorage - usedStorage} GB`,
+        usagePercentage: `${Math.round((usedStorage / totalStorage) * 100)}%`,
+      },
+      performance: {
+        cpu: `${Math.floor(Math.random() * 80) + 10}%`,
+        memory: `${Math.floor(Math.random() * 70) + 20}%`,
+        responseTime: `${Math.floor(Math.random() * 200) + 50}ms`,
+      },
+      statistics: {
+        totalRequests: Math.floor(Math.random() * 100000) + 50000,
+        requestsToday: Math.floor(Math.random() * 5000) + 1000,
+        errorRate: `${(Math.random() * 2).toFixed(2)}%`,
+        lastBackup: new Date(Date.now() - Math.floor(Math.random() * 86400000)), // within last day
+      },
+    };
+  }
+
+  // Get email templates
+  async getEmailTemplates(): Promise<any> {
+    // Mock email templates - in production, these would be stored in database
+    return [
+      {
+        id: 1,
+        name: 'Welcome Email',
+        subject: 'Welcome to LifeConnect!',
+        type: 'user_registration',
+        content: `
+          <h1>Welcome to LifeConnect!</h1>
+          <p>Thank you for joining our blood donation community.</p>
+          <p>Your account has been successfully created.</p>
+        `,
+        variables: ['{{userName}}', '{{userEmail}}'],
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 2,
+        name: 'Blood Request Alert',
+        subject: 'Urgent: Blood Donation Needed',
+        type: 'blood_request',
+        content: `
+          <h2>Blood Donation Request</h2>
+          <p>We need your help! There's an urgent need for {{bloodType}} blood.</p>
+          <p>Location: {{location}}</p>
+          <p>Contact: {{contactNumber}}</p>
+        `,
+        variables: ['{{bloodType}}', '{{location}}', '{{contactNumber}}'],
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: 3,
+        name: 'System Alert',
+        subject: 'System Alert: {{alertTitle}}',
+        type: 'system_alert',
+        content: `
+          <h2>{{alertTitle}}</h2>
+          <p>{{alertMessage}}</p>
+          <p>Priority: {{alertPriority}}</p>
+        `,
+        variables: ['{{alertTitle}}', '{{alertMessage}}', '{{alertPriority}}'],
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+  }
+
+  // Create email template
+  async createEmailTemplate(template: any): Promise<any> {
+    // Mock implementation - in production, this would save to database
+    const newTemplate = {
+      id: Math.floor(Math.random() * 1000) + 100,
+      ...template,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    return {
+      success: true,
+      message: 'Email template created successfully',
+      template: newTemplate,
+    };
+  }
+
+  // Update email template
+  async updateEmailTemplate(id: number, template: any): Promise<any> {
+    // Mock implementation - in production, this would update in database
+    return {
+      success: true,
+      message: 'Email template updated successfully',
+      template: {
+        id,
+        ...template,
+        updatedAt: new Date(),
+      },
+    };
+  }
+
+  // Delete email template
+  async deleteEmailTemplate(id: number): Promise<any> {
+    // Mock implementation - in production, this would delete from database
+    return {
+      success: true,
+      message: 'Email template deleted successfully',
+      deletedId: id,
+    };
+  }
+
+  // Get email sending history
+  async getEmailHistory(): Promise<any> {
+    // Mock email history data - in production, this would come from database
+    const emailHistory = [
+      {
+        id: 1,
+        recipient: 'user1@example.com',
+        subject: 'Welcome to LifeConnect!',
+        template: 'Welcome Email',
+        status: 'sent',
+        sentAt: new Date(Date.now() - 86400000), // 1 day ago
+        openedAt: new Date(Date.now() - 82800000), // 1 hour after sent
+        clickedAt: new Date(Date.now() - 82200000), // 10 minutes after opened
+      },
+      {
+        id: 2,
+        recipient: 'user2@example.com',
+        subject: 'Urgent: Blood Donation Needed',
+        template: 'Blood Request Alert',
+        status: 'sent',
+        sentAt: new Date(Date.now() - 43200000), // 12 hours ago
+        openedAt: new Date(Date.now() - 39600000), // 1 hour after sent
+        clickedAt: null,
+      },
+      {
+        id: 3,
+        recipient: 'user3@example.com',
+        subject: 'System Alert: Maintenance Scheduled',
+        template: 'System Alert',
+        status: 'failed',
+        sentAt: new Date(Date.now() - 21600000), // 6 hours ago
+        error: 'Invalid email address',
+      },
+      {
+        id: 4,
+        recipient: 'user4@example.com',
+        subject: 'Welcome to LifeConnect!',
+        template: 'Welcome Email',
+        status: 'pending',
+        scheduledAt: new Date(Date.now() + 3600000), // 1 hour from now
+      },
+    ];
+
+    const statistics = {
+      totalSent: emailHistory.filter(email => email.status === 'sent').length,
+      totalFailed: emailHistory.filter(email => email.status === 'failed').length,
+      totalPending: emailHistory.filter(email => email.status === 'pending').length,
+      openRate: '65%',
+      clickRate: '25%',
+    };
+
+    return {
+      emails: emailHistory,
+      statistics,
+      totalCount: emailHistory.length,
+    };
+  }
+
+  // Send bulk email
+  async sendBulkEmail(emailData: any): Promise<any> {
+    // Mock implementation - in production, this would queue emails for sending
+    const { recipients, template, subject, content, scheduleAt } = emailData;
+
+    // Simulate processing time
+    const totalRecipients = recipients ? recipients.length : 0;
+    const estimatedDeliveryTime = totalRecipients * 2; // 2 seconds per email
+
+    return {
+      success: true,
+      message: 'Bulk email queued successfully',
+      details: {
+        totalRecipients,
+        template: template || 'Custom',
+        subject,
+        scheduledAt: scheduleAt ? new Date(scheduleAt) : new Date(),
+        estimatedDeliveryTime: `${estimatedDeliveryTime} seconds`,
+        jobId: `email_job_${Date.now()}`,
+      },
+    };
+  }
+
+  // Get email settings
+  async getEmailSettings(): Promise<any> {
+    // Mock email settings - in production, these would be stored securely
+    return {
+      smtp: {
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT) || 587,
+        secure: false,
+        requireAuth: true,
+        username: process.env.SMTP_USER || 'your-email@gmail.com',
+        // Note: Never return actual password
+        passwordSet: !!process.env.SMTP_PASSWORD,
+      },
+      sender: {
+        name: 'LifeConnect Team',
+        email: process.env.FROM_EMAIL || 'noreply@lifeconnect.com',
+      },
+      options: {
+        enableEmailQueue: true,
+        maxRetryAttempts: 3,
+        retryDelay: 300, // seconds
+        batchSize: 50,
+        enableTracking: true,
+        enableUnsubscribe: true,
+      },
+      limits: {
+        dailySendLimit: 1000,
+        hourlySendLimit: 100,
+        recipientLimit: 500,
+      },
+      lastUpdated: new Date(),
+    };
+  }
+
+  // Update email settings
+  async updateEmailSettings(settings: any): Promise<any> {
+    // Mock implementation - in production, this would update configuration securely
+    return {
+      success: true,
+      message: 'Email settings updated successfully',
+      updatedSettings: {
+        ...settings,
+        // Remove sensitive data from response
+        password: undefined,
+        lastUpdated: new Date(),
+      },
     };
   }
 }

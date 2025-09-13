@@ -59,6 +59,24 @@ export class AdminController {
     }
   }
 
+  // GET /api/users/:id - Get specific user by ID
+  @UseGuards(AdminGuard)
+  @Get('users/:id')
+  async getUserById(@Param('id', ParseIntPipe) id: number) {
+    try {
+      const user = await this.adminService.findUserById(id);
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve user', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // GET /api/users/details - Retrieves all users details (name, blood group, contact)
   @Get('users/details')
   async getAllUsersDetails() {
@@ -291,6 +309,17 @@ export class AdminController {
         throw error;
       }
       throw new HttpException('Failed to delete alert', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/alerts - Get all alerts
+  @UseGuards(AdminGuard)
+  @Get('alerts')
+  async getAllAlerts() {
+    try {
+      return await this.adminService.getAllAlerts();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve alerts', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -573,6 +602,127 @@ export class AdminController {
       return await this.adminService.getMonthlySummaryReports();
     } catch (error) {
       throw new HttpException('Failed to generate monthly summary reports', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/admin/settings - Get system configuration settings
+  @UseGuards(AdminGuard)
+  @Get('admin/settings')
+  async getSystemSettings() {
+    try {
+      return await this.adminService.getSystemSettings();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve system settings', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PUT /api/admin/settings - Update system configuration settings
+  @UseGuards(AdminGuard)
+  @Put('admin/settings')
+  async updateSystemSettings(@Body() settings: any) {
+    try {
+      return await this.adminService.updateSystemSettings(settings);
+    } catch (error) {
+      throw new HttpException('Failed to update system settings', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/admin/system-info - Get system information
+  @UseGuards(AdminGuard)
+  @Get('admin/system-info')
+  async getSystemInfo() {
+    try {
+      return await this.adminService.getSystemInfo();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve system information', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/email/templates - Get email templates
+  @UseGuards(AdminGuard)
+  @Get('email/templates')
+  async getEmailTemplates() {
+    try {
+      return await this.adminService.getEmailTemplates();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve email templates', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/email/templates - Create new email template
+  @UseGuards(AdminGuard)
+  @Post('email/templates')
+  async createEmailTemplate(@Body() template: any) {
+    try {
+      return await this.adminService.createEmailTemplate(template);
+    } catch (error) {
+      throw new HttpException('Failed to create email template', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PUT /api/email/templates/:id - Update email template
+  @UseGuards(AdminGuard)
+  @Put('email/templates/:id')
+  async updateEmailTemplate(@Param('id', ParseIntPipe) id: number, @Body() template: any) {
+    try {
+      return await this.adminService.updateEmailTemplate(id, template);
+    } catch (error) {
+      throw new HttpException('Failed to update email template', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // DELETE /api/email/templates/:id - Delete email template
+  @UseGuards(AdminGuard)
+  @Delete('email/templates/:id')
+  async deleteEmailTemplate(@Param('id', ParseIntPipe) id: number) {
+    try {
+      return await this.adminService.deleteEmailTemplate(id);
+    } catch (error) {
+      throw new HttpException('Failed to delete email template', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/email/history - Get email sending history
+  @UseGuards(AdminGuard)
+  @Get('email/history')
+  async getEmailHistory() {
+    try {
+      return await this.adminService.getEmailHistory();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve email history', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/email/send-bulk - Send bulk email to users
+  @UseGuards(AdminGuard)
+  @Post('email/send-bulk')
+  async sendBulkEmail(@Body() emailData: any) {
+    try {
+      return await this.adminService.sendBulkEmail(emailData);
+    } catch (error) {
+      throw new HttpException('Failed to send bulk email', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/email/settings - Get email server settings
+  @UseGuards(AdminGuard)
+  @Get('email/settings')
+  async getEmailSettings() {
+    try {
+      return await this.adminService.getEmailSettings();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve email settings', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PUT /api/email/settings - Update email server settings
+  @UseGuards(AdminGuard)
+  @Put('email/settings')
+  async updateEmailSettings(@Body() settings: any) {
+    try {
+      return await this.adminService.updateEmailSettings(settings);
+    } catch (error) {
+      throw new HttpException('Failed to update email settings', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
