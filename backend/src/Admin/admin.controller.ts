@@ -34,6 +34,16 @@ export class AdminController {
     }
   }
 
+  // GET /api/users/details - Retrieves all users details (name, blood group, contact)
+  @Get('users/details')
+  async getAllUsersDetails() {
+    try {
+      return await this.adminService.getAllUsersDetails();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve users details', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // POST /api/users - Creates a new user account
   @UseGuards(AdminGuard)
   @Post('users')

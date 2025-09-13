@@ -43,6 +43,21 @@ export class AdminService {
     });
   }
 
+  // Get all users details (name, blood group, contact)
+  async getAllUsersDetails() {
+    const users = await this.userRepository.find({
+      select: ['id', 'name', 'bloodType', 'phoneNumber'],
+      order: { createdAt: 'DESC' },
+    });
+    
+    return users.map(user => ({
+      id: user.id,
+      name: user.name,
+      bloodGroup: user.bloodType,
+      contactNumber: user.phoneNumber,
+    }));
+  }
+
   // Find user by ID
   async findUserById(id: number): Promise<User | null> {
     return await this.userRepository.findOne({
