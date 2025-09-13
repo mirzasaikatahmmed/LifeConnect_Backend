@@ -1248,7 +1248,7 @@ export class AdminService {
     return {
       smtp: {
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.SMTP_PORT) || 587,
+        port: parseInt(process.env.SMTP_PORT || '587'),
         secure: false,
         requireAuth: true,
         username: process.env.SMTP_USER || 'your-email@gmail.com',
