@@ -10,9 +10,11 @@ import {
   Req,
   Query,
   ParseIntPipe,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { AlertService } from './alert.service';
-import { AdminGuard } from './guards/admin.guard';
+import { AuthGuard } from './guards/auth.guard';
 import {
   CreateAlertDto,
   UpdateAlertDto,
@@ -20,7 +22,7 @@ import {
 } from './dto/alert.dto';
 
 @Controller('api/alerts')
-@UseGuards(AdminGuard)
+@UseGuards(AuthGuard)
 export class AlertController {
   constructor(private readonly alertService: AlertService) {}
 
@@ -29,8 +31,13 @@ export class AlertController {
     @Req() req: any,
     @Body() createAlertDto: CreateAlertDto,
   ): Promise<AlertResponseDto> {
+    // Check if user has admin privileges
+    if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+      throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+    }
+
     const alert = await this.alertService.createAlert(
-      req.user.sub,
+      req.user.sub || req.user.id,
       createAlertDto,
     );
     return this.formatAlertResponse(alert);
@@ -77,9 +84,14 @@ export class AlertController {
     @Req() req: any,
     @Body() updateAlertDto: UpdateAlertDto,
   ): Promise<AlertResponseDto> {
+    // Check if user has admin privileges
+    if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+      throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+    }
+
     const alert = await this.alertService.updateAlert(
       id,
-      req.user.sub,
+      req.user.sub || req.user.id,
       updateAlertDto,
     );
     return this.formatAlertResponse(alert);
@@ -90,7 +102,12 @@ export class AlertController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
   ): Promise<{ message: string }> {
-    await this.alertService.deleteAlert(id, req.user.sub);
+    // Check if user has admin privileges
+    if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+      throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+    }
+
+    await this.alertService.deleteAlert(id, req.user.sub || req.user.id);
     return { message: 'Alert deleted successfully' };
   }
 

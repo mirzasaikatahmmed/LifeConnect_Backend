@@ -5,7 +5,9 @@ import {
   IsNumber,
   IsDate,
   IsOptional,
+  IsDateString,
 } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateBloodRequestDto {
   @IsString()
@@ -24,6 +26,7 @@ export class CreateBloodRequestDto {
   @IsNotEmpty()
   hospitalAddress: string;
 
+  @Type(() => Date)
   @IsDate()
   @IsNotEmpty()
   neededBy: Date;
@@ -54,6 +57,7 @@ export class UpdateBloodRequestDto {
   @IsOptional()
   hospitalAddress?: string;
 
+  @Type(() => Date)
   @IsDate()
   @IsOptional()
   neededBy?: Date;

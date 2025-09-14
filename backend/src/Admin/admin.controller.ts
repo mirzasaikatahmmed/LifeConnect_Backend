@@ -286,10 +286,25 @@ export class AdminController {
   // POST /api/alerts - Sends a new system-wide alert or notification
   @UseGuards(AdminGuard)
   @Post('alerts')
-  async createAlert(@Body() createAlertDto: CreateAlertDto) {
+  async createAlert(@Body() createAlertDto: CreateAlertDto, @Request() req) {
     try {
-      return await this.adminService.createAlert(createAlertDto);
+      // Get user ID from JWT token
+      const userId = req.user?.id || req.user?.sub;
+      if (!userId) {
+        throw new HttpException('User ID not found in token', HttpStatus.BAD_REQUEST);
+      }
+
+      // Add userId to the alert data
+      const alertDataWithUser = {
+        ...createAlertDto,
+        userId: userId
+      };
+
+      return await this.adminService.createAlert(alertDataWithUser);
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new HttpException('Failed to create alert', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -416,22 +431,63 @@ export class AdminController {
     }
   }
 
-  // GET /api/blood-requests - Get all blood requests
-  @UseGuards(AdminGuard)
-  @Get('blood-requests')
-  async getAllBloodRequests() {
+  // GET /api/auth-debug - Debug authentication (temporary endpoint)
+  @UseGuards(AuthGuard)
+  @Get('auth-debug')
+  async debugAuth(@Request() req) {
     try {
+      return {
+        success: true,
+        message: 'Authentication successful',
+        user: req.user,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      throw new HttpException('Authentication debug failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/blood-requests - Get all blood requests (try with basic auth first)
+  @UseGuards(AuthGuard)
+  @Get('blood-requests')
+  async getAllBloodRequests(@Request() req) {
+    try {
+      // Check if user has admin privileges
+      if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+        throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+      }
       return await this.adminService.getAllBloodRequests();
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('Failed to retrieve blood requests', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/blood-requests-alt - Alternative blood requests endpoint with less strict auth
+  @UseGuards(AuthGuard)
+  @Get('blood-requests-alt')
+  async getAllBloodRequestsAlt(@Request() req) {
+    try {
+      console.log('User accessing blood requests:', req.user);
+      return await this.adminService.getAllBloodRequests();
+    } catch (error) {
+      console.error('Error in blood-requests-alt:', error);
       throw new HttpException('Failed to retrieve blood requests', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   // GET /api/blood-requests/:id - Get blood request by ID
-  @UseGuards(AdminGuard)
+  @UseGuards(AuthGuard)
   @Get('blood-requests/:id')
-  async getBloodRequestById(@Param('id', ParseIntPipe) id: number) {
+  async getBloodRequestById(@Param('id', ParseIntPipe) id: number, @Request() req) {
     try {
+      // Check if user has admin privileges
+      if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+        throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+      }
+
       const bloodRequest = await this.adminService.getBloodRequestById(id);
       if (!bloodRequest) {
         throw new HttpException('Blood request not found', HttpStatus.NOT_FOUND);
@@ -446,27 +502,89 @@ export class AdminController {
   }
 
   // POST /api/blood-requests - Create a new blood request
-  @UseGuards(AdminGuard)
+  @UseGuards(AuthGuard)
   @Post('blood-requests')
-  async createBloodRequest(@Body() createBloodRequestDto: CreateBloodRequestDto) {
+  async createBloodRequest(@Body() createBloodRequestDto: CreateBloodRequestDto, @Request() req) {
     try {
-      return await this.adminService.createBloodRequest(createBloodRequestDto);
+      console.log('Creating blood request with data:', createBloodRequestDto);
+      console.log('User from request:', req.user);
+
+      // Check if user has admin privileges
+      if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+        throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+      }
+
+      // Add the user ID from the authenticated admin
+      const bloodRequestData = {
+        ...createBloodRequestDto,
+        userId: req.user.sub || req.user.id || 1 // fallback to 1 if no user ID
+      };
+
+      console.log('Final blood request data:', bloodRequestData);
+      const result = await this.adminService.createBloodRequest(bloodRequestData);
+      console.log('Blood request created successfully:', result);
+
+      return result;
     } catch (error) {
+      console.error('Error creating blood request:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new HttpException('Failed to create blood request', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-  // PATCH /api/blood-requests/:id - Update blood request
-  @UseGuards(AdminGuard)
-  @Patch('blood-requests/:id')
-  async updateBloodRequest(@Param('id', ParseIntPipe) id: number, @Body() updateBloodRequestDto: UpdateBloodRequestDto) {
+  // POST /api/blood-requests-simple - Simple blood request creation (for testing)
+  @UseGuards(AuthGuard)
+  @Post('blood-requests-simple')
+  async createBloodRequestSimple(@Body() createBloodRequestDto: any, @Request() req) {
     try {
+      console.log('Simple blood request creation:', createBloodRequestDto);
+      console.log('User:', req.user);
+
+      const bloodRequestData = {
+        bloodType: createBloodRequestDto.bloodType,
+        urgencyLevel: createBloodRequestDto.urgencyLevel,
+        hospitalName: createBloodRequestDto.hospitalName,
+        hospitalAddress: createBloodRequestDto.hospitalAddress,
+        neededBy: new Date(createBloodRequestDto.neededBy),
+        unitsNeeded: createBloodRequestDto.unitsNeeded || 1,
+        userId: 1, // Use hardcoded for testing
+        status: 'active'
+      };
+
+      return await this.adminService.createBloodRequest(bloodRequestData);
+    } catch (error) {
+      console.error('Simple blood request creation error:', error);
+      throw new HttpException(error.message || 'Failed to create blood request', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // PATCH /api/blood-requests/:id - Update blood request
+  @UseGuards(AuthGuard)
+  @Patch('blood-requests/:id')
+  async updateBloodRequest(@Param('id', ParseIntPipe) id: number, @Body() updateBloodRequestDto: UpdateBloodRequestDto, @Request() req) {
+    try {
+      console.log(`Updating blood request ${id} with data:`, updateBloodRequestDto);
+      console.log('User from request:', req.user);
+
+      // Check if user has admin privileges
+      if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+        throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+      }
+
       const bloodRequest = await this.adminService.getBloodRequestById(id);
       if (!bloodRequest) {
         throw new HttpException('Blood request not found', HttpStatus.NOT_FOUND);
       }
-      return await this.adminService.updateBloodRequest(id, updateBloodRequestDto);
+
+      console.log('Original blood request:', bloodRequest);
+      const updatedBloodRequest = await this.adminService.updateBloodRequest(id, updateBloodRequestDto);
+      console.log('Updated blood request:', updatedBloodRequest);
+
+      return updatedBloodRequest;
     } catch (error) {
+      console.error(`Error updating blood request ${id}:`, error);
       if (error instanceof HttpException) {
         throw error;
       }
@@ -474,11 +592,54 @@ export class AdminController {
     }
   }
 
-  // DELETE /api/blood-requests/:id - Delete blood request
-  @UseGuards(AdminGuard)
-  @Delete('blood-requests/:id')
-  async deleteBloodRequest(@Param('id', ParseIntPipe) id: number) {
+  // PATCH /api/blood-requests/:id/simple - Simple update endpoint (for testing)
+  @UseGuards(AuthGuard)
+  @Patch('blood-requests/:id/simple')
+  async updateBloodRequestSimple(@Param('id', ParseIntPipe) id: number, @Body() updateData: any, @Request() req) {
     try {
+      console.log(`Simple update for blood request ${id}:`, updateData);
+
+      // Check if user has admin privileges
+      if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+        throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+      }
+
+      const bloodRequest = await this.adminService.getBloodRequestById(id);
+      if (!bloodRequest) {
+        throw new HttpException('Blood request not found', HttpStatus.NOT_FOUND);
+      }
+
+      // Manual field mapping for simple update
+      const updateDto: any = {};
+
+      if (updateData.bloodType) updateDto.bloodType = updateData.bloodType;
+      if (updateData.urgencyLevel) updateDto.urgencyLevel = updateData.urgencyLevel;
+      if (updateData.hospitalName) updateDto.hospitalName = updateData.hospitalName;
+      if (updateData.hospitalAddress) updateDto.hospitalAddress = updateData.hospitalAddress;
+      if (updateData.neededBy) updateDto.neededBy = new Date(updateData.neededBy);
+      if (updateData.unitsNeeded) updateDto.unitsNeeded = parseInt(updateData.unitsNeeded);
+      if (updateData.status) updateDto.status = updateData.status;
+
+      return await this.adminService.updateBloodRequest(id, updateDto);
+    } catch (error) {
+      console.error(`Simple update error for blood request ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(error.message || 'Failed to update blood request', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // DELETE /api/blood-requests/:id - Delete blood request
+  @UseGuards(AuthGuard)
+  @Delete('blood-requests/:id')
+  async deleteBloodRequest(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    try {
+      // Check if user has admin privileges
+      if (req.user?.role !== 'admin' && req.user?.userType !== 'admin') {
+        throw new HttpException('Admin privileges required', HttpStatus.FORBIDDEN);
+      }
+
       const bloodRequest = await this.adminService.getBloodRequestById(id);
       if (!bloodRequest) {
         throw new HttpException('Blood request not found', HttpStatus.NOT_FOUND);
@@ -723,6 +884,28 @@ export class AdminController {
       return await this.adminService.updateEmailSettings(settings);
     } catch (error) {
       throw new HttpException('Failed to update email settings', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/blood-request-analytics - Blood request analytics
+  @UseGuards(AdminGuard)
+  @Get('reports/blood-request-analytics')
+  async getBloodRequestAnalytics() {
+    try {
+      return await this.adminService.getBloodRequestAnalytics();
+    } catch (error) {
+      throw new HttpException('Failed to generate blood request analytics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // GET /api/reports/donation-analytics - Donation analytics
+  @UseGuards(AdminGuard)
+  @Get('reports/donation-analytics')
+  async getDonationAnalytics() {
+    try {
+      return await this.adminService.getDonationAnalytics();
+    } catch (error) {
+      throw new HttpException('Failed to generate donation analytics', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

@@ -11,12 +11,13 @@ import { Role } from './entities/role.entity';
 import { Alert } from './entities/alert.entity';
 import { UserActivity } from './entities/user-activity.entity';
 import { BloodRequest } from '../Manager/Entities/bloodrequest.entity';
+import { BloodDonationHistory } from '../Donor/entities/blooddonationhistory.entity';
 import { AdminGuard } from './guards/admin.guard';
 import { JwtGuard } from './guards/jwt.guard';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, Alert, UserActivity, BloodRequest]),
+    TypeOrmModule.forFeature([User, Role, Alert, UserActivity, BloodRequest, BloodDonationHistory]),
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'lifeconnect-secret-key',
       signOptions: { expiresIn: '24h' },
