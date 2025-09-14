@@ -3,6 +3,7 @@
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
 import { User } from '../Admin/entities/user.entity';
 import { BloodDonationHistory } from './entities/blooddonationhistory.entity';
 import { BloodRequest } from '../Manager/Entities/bloodrequest.entity';
@@ -19,6 +20,10 @@ console.log('SMTP_PASS from env:', process.env.SMTP_PASS);
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, BloodDonationHistory, BloodRequest]),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'lifeconnect-secret-key',
+      signOptions: { expiresIn: '24h' },
+    }),
   ],
   controllers: [DonorController],
   providers: [DonorService, JwtGuard, MailerService],

@@ -116,8 +116,8 @@ export class DonorService {
       ...historyData,
       user: user,
     });
-    //return (await this.historyRepository.save(newHistory)) as BloodDonationHistory; 
-     return this.historyRepository.save(newHistory);
+    const saved = await this.historyRepository.save(newHistory);
+    return Array.isArray(saved) ? saved[0] : saved;
   }
 
   async getHistoryById(userId: number, id: number): Promise<BloodDonationHistory> {
