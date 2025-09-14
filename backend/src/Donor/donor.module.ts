@@ -10,6 +10,7 @@ import { DonorService } from './donor.service';
 import { DonorController } from './donor.controller';
 import { JwtGuard } from './guards/jwt.guard';
 import { MailerService } from './mailer.service';
+import { JwtModule } from '@nestjs/jwt';
 
 
 // Debug logs to verify .env variables
@@ -24,4 +25,4 @@ console.log('SMTP_PASS from env:', process.env.SMTP_PASS);
   providers: [DonorService, JwtGuard, MailerService],
   exports: [DonorService],
 })
-export class DonorModule {}
+export class DonorModule { }
