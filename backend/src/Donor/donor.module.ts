@@ -10,7 +10,6 @@ import { DonorService } from './donor.service';
 import { DonorController } from './donor.controller';
 import { JwtGuard } from './guards/jwt.guard';
 import { MailerService } from './mailer.service';
-import { JwtModule } from '@nestjs/jwt';
 
 
 // Debug logs to verify .env variables
