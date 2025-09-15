@@ -91,6 +91,16 @@ export class AdminController {
     }
   }
 
+  // GET /api/donors/public - Public endpoint for donor search (no authentication required)
+  @Get('donors/public')
+  async getPublicDonorsList() {
+    try {
+      return await this.adminService.getAllUsersDetails();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve donors list', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // POST /api/users - Creates a new user account
   @Post('users')
   async createUser(@Body() createUserDto: CreateUserDto) {
