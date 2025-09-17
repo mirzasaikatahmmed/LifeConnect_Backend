@@ -14,6 +14,7 @@ import { BloodRequest } from '../Manager/Entities/bloodrequest.entity';
 import { BloodDonationHistory } from '../Donor/entities/blooddonationhistory.entity';
 import { AdminGuard } from './guards/admin.guard';
 import { JwtGuard } from './guards/jwt.guard';
+import { PusherModule } from '../pusher/pusher.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JwtGuard } from './guards/jwt.guard';
       secret: process.env.JWT_SECRET || 'lifeconnect-secret-key',
       signOptions: { expiresIn: '24h' },
     }),
+    PusherModule,
   ],
   controllers: [AdminController, AlertController],
   providers: [AdminService, AlertService, MailerService, AdminGuard, JwtGuard],
