@@ -5,10 +5,14 @@ import { UpdateUserRoleDto, CreateAlertDto, SendAlertEmailDto, CreateUserDto, Up
 import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
 import { CreateBloodRequestDto, UpdateBloodRequestDto } from '../Manager/dto files/bloodrequest.dto';
+import { PusherBeamsService } from '../pusher/pusher-beams.service';
 
 @Controller('api')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly pusherBeamsService: PusherBeamsService,
+  ) {}
 
   // POST /api/login - Universal login endpoint (accepts any user type)
   @Post('login')
@@ -87,8 +91,17 @@ export class AdminController {
     }
   }
 
+  // GET /api/donors/public - Public endpoint for donor search (no authentication required)
+  @Get('donors/public')
+  async getPublicDonorsList() {
+    try {
+      return await this.adminService.getAllUsersDetails();
+    } catch (error) {
+      throw new HttpException('Failed to retrieve donors list', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   // POST /api/users - Creates a new user account
-  @UseGuards(AdminGuard)
   @Post('users')
   async createUser(@Body() createUserDto: CreateUserDto) {
     try {
@@ -97,7 +110,24 @@ export class AdminController {
       if (existingUser) {
         throw new HttpException('User with this email already exists', HttpStatus.CONFLICT);
       }
-      return await this.adminService.createUser(createUserDto);
+
+      const newUser = await this.adminService.createUser(createUserDto);
+
+      // Send push notification to admins about new user registration
+      try {
+        await this.pusherBeamsService.notifyNewUserRegistration({
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          bloodType: newUser.bloodType,
+        });
+        console.log('Push notification sent to admins for new user registration');
+      } catch (notificationError) {
+        console.error('Failed to send push notification:', notificationError);
+        // Don't fail the user creation if notification fails
+      }
+
+      return newUser;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -906,6 +936,33 @@ export class AdminController {
       return await this.adminService.getDonationAnalytics();
     } catch (error) {
       throw new HttpException('Failed to generate donation analytics', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // POST /api/push-notification/test - Test push notification
+  @Post('push-notification/test')
+  async testPushNotification(@Body() testData: { title?: string; message?: string }) {
+    try {
+      const title = testData.title || 'Test Notification';
+      const message = testData.message || 'This is a test push notification from LifeConnect Admin';
+
+      await this.pusherBeamsService.sendToAdmins({
+        title,
+        body: message,
+        data: {
+          type: 'test',
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Test push notification sent successfully',
+        notification: { title, body: message },
+      };
+    } catch (error) {
+      console.error('Failed to send test push notification:', error);
+      throw new HttpException('Failed to send test push notification', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
