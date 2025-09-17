@@ -27,15 +27,15 @@ import { DonorModule } from './Donor/donor.module';
       synchronize: true,
 
 
-      ssl: {
-        rejectUnauthorized: false,
-      },
-      extra: {
-        // Force IPv4 resolution
-        dnsLookup: (hostname, options, callback) =>
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
-          require('dns').lookup(hostname, { ...options, family: 4 }, callback),
-      },
+      // ssl: {
+      //   rejectUnauthorized: false,
+      // },
+      // extra: {
+      //   // Force IPv4 resolution
+      //   dnsLookup: (hostname, options, callback) =>
+      //     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
+      //     require('dns').lookup(hostname, { ...options, family: 4 }, callback),
+      // },
 
     }),
   ],

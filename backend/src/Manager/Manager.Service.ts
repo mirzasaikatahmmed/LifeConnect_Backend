@@ -10,6 +10,7 @@ import { ManagerEntity } from './Entities/Manager.entity';
 import { Repository } from 'typeorm';
 import { CreateManagerDto } from './dto files/manager.dto';
 import * as bcrypt from 'bcrypt';
+import * as Pusher from 'pusher';
 import {
   CreateRoleDto,
   CreateUserDto,
@@ -325,7 +326,30 @@ export class ManagerService {
   //   const post = await this.requestRepository.save(createdata);
   //   return { message: "Blood request Posted", data: post }
   // }
-  async createbloodrequest(
+
+  // previous createbloodrequest
+  // async createbloodrequest(
+  //   userId: number,
+  //   createdata: CreateBloodRequestDto,
+  // ): Promise<{ message: string; data?: BloodRequest }> {
+  //   const bloodRequestData = {
+  //     ...createdata,
+  //     userId,
+  //     // neededBy: new Date(createdata.neededBy) // Convert string to Date
+  //   };
+  //   const post = await this.requestRepository.save(bloodRequestData);
+  //   return { message: 'Blood request Posted', data: post };
+  // }
+//testing with pusher 
+    private pusher = new Pusher({
+  appId: process.env.PUSHER_APP_ID!,
+  key: process.env.PUSHER_KEY!,
+  secret: process.env.PUSHER_SECRET!,
+  cluster: process.env.PUSHER_CLUSTER!,
+  useTLS: true
+});
+
+    async createbloodrequest(
     userId: number,
     createdata: CreateBloodRequestDto,
   ): Promise<{ message: string; data?: BloodRequest }> {
@@ -334,11 +358,17 @@ export class ManagerService {
       userId,
       // neededBy: new Date(createdata.neededBy) // Convert string to Date
     };
-
     const post = await this.requestRepository.save(bloodRequestData);
+
+      this.pusher.trigger('blood-requests', 'new-request', {
+    id: post.id,
+    message: 'New blood request posted',
+    timestamp: new Date()
+  });
+
     return { message: 'Blood request Posted', data: post };
   }
-
+  //test end
   async updateBloodRequest(
     requestId: number,
     updateData: UpdateBloodRequestDto,
